@@ -1,0 +1,5 @@
+# Large Defects4J repo bundles are provided locally, not committed.
+# Single source of truth lives at base/defects4j-repos-v2.zip (several hundred MB).
+*.zip
+
+
