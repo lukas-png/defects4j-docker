@@ -56,26 +56,6 @@ main() {
 
     ############################################################################
     #
-    # Download Major
-    #
-    # Adapt Major's default wrapper scripts:
-    # - set headless to true to support Chart on machines without X.
-    # - do not mutate code unless an MML is specified (for historical reasons,
-    #   major v1 was sometimes called without specifying an MML to simply act as
-    #   javac; Major v2+'s default is to generate all mutants as opposed to none).
-    #
-    echo
-    echo "Setting up Major ... "
-    MAJOR_VERSION="1.3.4"
-    MAJOR_URL="https://mutation-testing.org/downloads"
-    MAJOR_ZIP="major-${MAJOR_VERSION}_jre7.zip"
-    cd "$BASE" && wget -nv -N "$MAJOR_URL/$MAJOR_ZIP" \
-           && unzip -o "$MAJOR_ZIP" > /dev/null \
-           && rm "$MAJOR_ZIP" \
-           && cp major/bin/.ant major/bin/ant
-
-    ############################################################################
-    #
     # Download EvoSuite
     #
     echo
