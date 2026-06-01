@@ -17,7 +17,7 @@ SKIPPED=0
 checkout_bug() {
     local PID="$1"
     local BID="$2"
-    local DIR_NAME="${PID}_${BID}"
+    local DIR_NAME="${PID}/${BID}"
     local TARGET_PATH="$WORK_DIR/$DIR_NAME"
 
     ((TOTAL_ATTEMPTS++))
