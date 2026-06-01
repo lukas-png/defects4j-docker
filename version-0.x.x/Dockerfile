@@ -83,13 +83,12 @@ RUN chmod +x /opt/defects4j/init.sh \
                      /opt/defects4j/project_repos/get_repos.sh \
                      /usr/local/bin/checkout_all.sh
 
-# Optionally bake in the local Gradle archives so init.sh can use them instead
+# Bake in the local Gradle archives so init.sh can use them instead
 # of downloading from defects4j.org (~100 MB for dists). The wildcards make the
 # zips optional: when an archive is absent only the .keep placeholder is copied
 # and init.sh falls back to the remote download for that archive.
-COPY base/.gradle-keep \
-     base/defects4j-gradle-dists.zip* \
-     base/defects4j-gradle-deps.zip* \
+COPY base/defects4j-gradle-dists.zip \
+     base/defects4j-gradle-deps.zip \
      /opt/gradle-dists/
 
 # -----------------------------------------------------------------------------
