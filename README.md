@@ -16,19 +16,19 @@ ohne Compile beim Start.
 
 ```bash
 # alle Versionen bauen
-./build_all.sh
+./build.sh
 
 # nur eine Version (Filter auf den Kontextnamen)
-./build_all.sh 2.x
+./build.sh 2.
 ```
 
 Verfügbare Versionen:
 
-| Image            | Defects4J | Java   |
-|------------------|-----------|--------|
-| `d4j-full:0.1.0` | 0.1.0     | Java 7 |
-| `d4j-full:1.4.0` | 1.4.0     | Java 7 |
-| `d4j-full:2.0.0` | 2.0.0     | Java 8 |
+| Image             | Defects4J | Java   |
+|-------------------|-----------|--------|
+| `defects4j:0.1.0` | 0.1.0     | Java 7 |
+| `defects4j:1.4.0` | 1.4.0     | Java 7 |
+| `defects4j:2.0.0` | 2.0.0     | Java 8 |
 
 Ein Build dauert pro Version deutlich über eine Stunde (kompletter Checkout +
 Compile aller Bugs) und erzeugt mehrere GB große Images.
@@ -37,7 +37,7 @@ Compile aller Bugs) und erzeugt mehrere GB große Images.
 
 ```bash
 # Container starten — landet direkt in /work
-docker run --rm -it d4j-full:2.0.0
+docker run --rm -it defects4j:2.0.0
 
 # einen Bug verwenden
 cd /work/Lang_1
@@ -55,7 +55,7 @@ JacksonDatabind, JacksonXml, Jsoup, JxPath, Mockito).
 Cache (`/opt/d4j-cache`) befüllt:
 
 ```bash
-docker run --rm -it -v "$PWD/work-2.0.0:/work" d4j-full:2.0.0
+docker run --rm -it -v "$PWD/work-2.0.0:/work" defects4j:2.0.0
 ```
 
 ### Einzelnen Bug neu auschecken
