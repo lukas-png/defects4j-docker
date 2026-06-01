@@ -1,5 +1,0 @@
-# Placeholder so the Dockerfile COPY for the optional Gradle distributions
-# archive always has at least one valid source. This lets the companion
-# wildcard `base/defects4j-gradle-dists.zip*` match zero files when the (large,
-# gitignored) archive is not present, in which case init.sh downloads it from
-# defects4j.org instead. Do not delete.
