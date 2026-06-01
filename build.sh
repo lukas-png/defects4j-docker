@@ -69,6 +69,24 @@ ctx_for_version() {
 
 ensure_base_zips
 
+
+# Container engine: honour $ENGINE if set, otherwise prefer podman, then docker.
+ENGINE="${ENGINE:-}"
+if [[ -z "$ENGINE" ]]; then
+    if command -v podman >/dev/null 2>&1; then
+        ENGINE="podman"
+    elif command -v docker >/dev/null 2>&1; then
+        ENGINE="docker"
+    else
+        red "Neither podman nor docker found on PATH."
+        exit 1
+    fi
+elif ! command -v "$ENGINE" >/dev/null 2>&1; then
+    red "Requested engine '$ENGINE' not found on PATH."
+    exit 1
+fi
+
+
 built=()
 for ver in "${BUILDS[@]}"; do
     [[ -n "$FILTER" && ! "$ver" =~ ^$FILTER ]] && continue
@@ -76,8 +94,8 @@ for ver in "${BUILDS[@]}"; do
     ctx="$(ctx_for_version "$ver")"
     tag="defects4j:$ver"
 
-    cyan "\nBuilding $tag (Defects4J $ver) from $ctx"
-    if podman build \
+    cyan "\nBuilding $tag (Defects4J $ver) from $ctx with $ENGINE"
+    if "$ENGINE" build \
         --build-arg D4J_VERSION="$ver" \
         -f "$BASE_DIR/$ctx/Dockerfile" \
         -t "$tag" \
@@ -98,4 +116,4 @@ fi
 green "\nAll requested images built:"
 printf '  - %s\n' "${built[@]}"
 echo
-echo "Run one with e.g.: docker run --rm -it ${built[0]}"
+echo "Run one with e.g.: $ENGINE run --rm -it ${built[0]}"
