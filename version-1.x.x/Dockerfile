@@ -3,7 +3,7 @@
 #
 # Build with the repository root as build context (so common/ and base/ are
 # reachable):
-#   docker build -f version-1.x.x/Dockerfile -t d4j-full:1.4.0 \
+#   docker build -f version-1.x.x/Dockerfile -t defects4j:1.4.0 \
 #       --build-arg D4J_VERSION=1.4.0 .
 # =============================================================================
 FROM ubuntu:26.04

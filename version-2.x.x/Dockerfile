@@ -4,7 +4,7 @@
 # Like 0.x / 1.x this builds from a stock Ubuntu base; the only difference is
 # Java 8 instead of Java 7. Build with the repository root as build context
 # (so common/ and base/ are reachable):
-#   docker build -f version-2.x.x/Dockerfile -t d4j-full:2.0.0 \
+#   docker build -f version-2.x.x/Dockerfile -t defects4j:2.0.0
 #       --build-arg D4J_VERSION=2.0.0 .
 # =============================================================================
 FROM ubuntu:26.04
