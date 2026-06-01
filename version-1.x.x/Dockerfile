@@ -7,6 +7,8 @@
 #       --build-arg D4J_VERSION=1.4.0 .
 # =============================================================================
 FROM ubuntu:26.04
+LABEL org.opencontainers.image.source=https://github.com/lukas-png/defects4j-docker
+LABEL org.opencontainers.image.licenses=MIT
 
 ENV DEBIAN_FRONTEND=noninteractive
 
