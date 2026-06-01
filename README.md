@@ -1,28 +1,28 @@
-# Defects4J — vorgebaute Container-Images
+# Defects4J — prebuilt container images
 
-Docker-/Podman-Images für [Defects4J](https://github.com/rjust/defects4j), bei
-denen alle aktiven Bugs schon zur Build-Zeit ausgecheckt und kompiliert sind.
-Container starten mit einem fertig befüllten `/work`, also ohne Download und
-ohne Compile beim Start.
+Docker/Podman images for [Defects4J](https://github.com/rjust/defects4j) with all
+active bugs already checked out and compiled at build time. Containers start with
+a fully populated `/work`, so there is no download or compile step at startup.
 
-## Voraussetzungen
+## Requirements
 
-- Docker oder Podman (`build_all.sh` nutzt standardmäßig `podman`)
-- Das Repo-Bundle unter `base/defects4j-repos.zip` (mehrere hundert MB, nicht im
-  Git-Repo enthalten, siehe `.gitignore`)
-- Mehrere GB freier Plattenplatz pro Image
+- Docker or Podman (`build.sh` prefers `podman`, then `docker`)
+- The base archives under `base/` (`defects4j-repos.zip` and the Gradle bundles).
+  They are downloaded on demand if missing; they total several hundred MB and are
+  not tracked in Git (see `base/.gitignore`).
+- Several GB of free disk space per image
 
-## Bauen
+## Building
 
 ```bash
-# alle Versionen bauen
+# build all versions
 ./build.sh
 
-# nur eine Version (Filter auf den Kontextnamen)
+# build a single version (prefix filter on the version)
 ./build.sh 2.
 ```
 
-Verfügbare Versionen:
+Currently available images:
 
 | Image             | Defects4J | Java   |
 |-------------------|-----------|--------|
@@ -30,52 +30,50 @@ Verfügbare Versionen:
 | `defects4j:1.4.0` | 1.4.0     | Java 7 |
 | `defects4j:2.0.0` | 2.0.0     | Java 8 |
 
-Ein Build dauert pro Version deutlich über eine Stunde (kompletter Checkout +
-Compile aller Bugs) und erzeugt mehrere GB große Images.
+More versions can be added by extending the `BUILDS` array in `build.sh` and
+providing a matching `version-X.x.x/` build context.
 
-## Benutzen
+A build takes well over an hour per version (full checkout and compile of every
+bug) and produces multi-GB images.
+
+## Using
 
 ```bash
-# Container starten — landet direkt in /work
+# start a container — drops you into /work
 docker run --rm -it defects4j:2.0.0
 
-# einen Bug verwenden
-cd /work/Lang_1
+# work with a bug
+cd /work/Lang/1
 defects4j test
 ```
 
-Jeder Bug liegt unter `/work/<Projekt>_<BugID>`, z. B. `/work/Math_5`,
-`/work/Closure_42`. Enthalten sind alle Projekte mit aktiven Bugs (Chart, Math,
-Lang, Time, Closure, Cli, Codec, Collections, Compress, Csv, Gson, JacksonCore,
-JacksonDatabind, JacksonXml, Jsoup, JxPath, Mockito).
+Every bug lives under `/work/<Project>/<BugID>`, e.g. `/work/Math/5`,
+`/work/Closure/42`. From there you can run any `defects4j` command
+(`defects4j test`, `defects4j compile`, …) or point your own tooling at the
+checkout.
 
-### Änderungen persistieren
+Included are all projects with active bugs: Chart, Math, Lang, Time, Closure,
+Cli, Codec, Collections, Compress, Csv, Gson, JacksonCore, JacksonDatabind,
+JacksonXml, Jsoup, JxPath, Mockito.
 
-`/work` als Volume mounten. Ein leeres Volume wird beim ersten Start aus dem
-Cache (`/opt/d4j-cache`) befüllt:
+### Persisting changes
+
+Mount a volume at `/work`. An empty volume is seeded from the baked-in cache
+(`/opt/d4j-cache`) on first start:
 
 ```bash
 docker run --rm -it -v "$PWD/work-2.0.0:/work" defects4j:2.0.0
 ```
 
-### Einzelnen Bug neu auschecken
+## Notes
 
-```bash
-d4j-checkout Lang-1            # nach /work/Lang-1
-d4j-checkout Math-5 /tmp/m5    # in ein eigenes Verzeichnis
-```
+- The timezone `TZ=America/Los_Angeles` is set for reproducible test results and
+  should not be changed.
+- Checkouts that fail during the build are recorded in
+  `/work/checkout_failures.log`; they do not abort the build.
 
-## Hinweise
+## License
 
-- Die Zeitzone `TZ=America/Los_Angeles` ist für reproduzierbare Tests gesetzt
-  und sollte nicht geändert werden.
-- Fehlgeschlagene Checkouts beim Build stehen in `/work/checkout_failures.log`;
-  der Build bricht dadurch nicht ab.
-- Die Java-Version ist pro Defects4J-Version festgelegt (siehe Tabelle) und für
-  korrekte Bug-Reproduktion erforderlich.
-
-## Lizenz
-
-Defects4J steht unter seiner eigenen Lizenz, siehe das
-[Upstream-Repository](https://github.com/rjust/defects4j). Dieses Repo liefert
-nur die Container-Build- und Bereitstellungsschicht darum herum.
+Defects4J is distributed under its own license; see the
+[upstream repository](https://github.com/rjust/defects4j). This repo only provides
+the container build and packaging layer around it.
