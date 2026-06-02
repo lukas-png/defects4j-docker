@@ -56,7 +56,7 @@ ctx_for_version() {
     local ver="$1"
 
     case "$ver" in
-        0.*) echo "version-0.x.x" ;;
+        0.*) echo "version-1.x.x" ;;
         1.*) echo "version-1.x.x" ;;
         2.*) echo "version-2.x.x" ;;
         *)
