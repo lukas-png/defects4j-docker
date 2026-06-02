@@ -3,7 +3,7 @@
 #
 # Like 0.x / 1.x this builds from a stock Ubuntu base; the only difference is
 # Java 8 instead of Java 7. Build with the repository root as build context
-# (so common/ and base/ are reachable):
+# (so common/ and is reachable):
 #   docker build -f version-2.x.x/Dockerfile -t defects4j:2.0.0
 #       --build-arg D4J_VERSION=2.0.0 .
 # =============================================================================
@@ -66,13 +66,15 @@ RUN sed -i 's|git clone $self->{repo}|git clone --no-hardlinks $self->{repo}|' \
 # -----------------------------------------------------------------------------
 # Local scripts + offline repo bundle.
 #   The repo bundle is the SAME single source of truth used by 0.x / 1.x:
-#   base/defects4j-repos.zip. get_repos.sh extracts the project repos from
+#   common/defects4j-repos.zip. get_repos.sh extracts the project repos from
 #   it (/opt/defects4j-repos.zip); nothing is downloaded at build time.
 # -----------------------------------------------------------------------------
-COPY base/defects4j-repos.zip      /opt/defects4j-repos.zip
-COPY version-2.x.x/get_repos.sh    /opt/defects4j/project_repos/get_repos.sh
-COPY version-2.x.x/checkout_all.sh        /usr/local/bin/checkout_all.sh
+COPY common/defects4j-repos.zip    /opt/defects4j-repos.zip
+COPY common/get_repos.sh           /opt/defects4j/project_repos/get_repos.sh
+COPY common/d4j-checkout           /usr/local/bin/d4j-checkout
+COPY version-2.x.x/checkout_all.sh /usr/local/bin/checkout_all.sh
 RUN chmod +x /opt/defects4j/project_repos/get_repos.sh \
+             /usr/local/bin/d4j-checkout \
              /usr/local/bin/checkout_all.sh && \
     sed -i 's/\r$//' /opt/defects4j/project_repos/get_repos.sh \
                      /usr/local/bin/checkout_all.sh
@@ -83,32 +85,10 @@ RUN chmod +x /opt/defects4j/project_repos/get_repos.sh \
 RUN ./init.sh
 
 # -----------------------------------------------------------------------------
-# Environment + helper scripts
+# Environment
 # -----------------------------------------------------------------------------
 ENV D4J_HOME=/opt/defects4j
 ENV PATH=/opt/defects4j/framework/bin:${PATH}
-
-# d4j-checkout <Project>-<BugID>: check out + compile a single bug (Java 8)
-RUN printf '%s\n' \
-'#!/usr/bin/env bash' \
-'set -euo pipefail' \
-'BUG="${1:-Lang-1}"' \
-'WORK="${2:-/work}"' \
-'PROJECT="${BUG%%-*}"' \
-'BID="${BUG##*-}"' \
-'' \
-'export JAVA_HOME="'"${JAVA_HOME}"'"' \
-'export PATH="$JAVA_HOME/bin:${PATH//"$JAVA_HOME\/bin:"/}"' \
-'' \
-'mkdir -p "$WORK/$PROJECT"' \
-'echo "[*] Java (should be 1.8): $(java -version 2>&1 | head -n 1)"' \
-'echo "[*] Checkout ${PROJECT}-${BID} into ${WORK}/${PROJECT}/${BID}"' \
-'defects4j checkout -p "$PROJECT" -v "${BID}b" -w "${WORK}/${PROJECT}/${BID}"' \
-'cd "${WORK}/${PROJECT}/${BID}"' \
-'echo "[*] Compile (Java 8)..."' \
-'defects4j compile' \
-'echo "[*] Done. Run tests with: defects4j test"' \
-> /usr/local/bin/d4j-checkout && chmod +x /usr/local/bin/d4j-checkout
 
 # -----------------------------------------------------------------------------
 # Bake the full checkout into the image, then move it to the cache so /work

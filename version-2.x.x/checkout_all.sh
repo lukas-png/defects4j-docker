@@ -1,5 +1,5 @@
 #!/bin/bash
-set -uo pipefail
+set -euo pipefail
 
 # Defects4J requires timezone America/Los_Angeles for test execution
 export TZ=America/Los_Angeles
@@ -10,16 +10,6 @@ mkdir -p "$WORK_DIR"
 
 # Base path for Defects4J projects
 D4J_PROJECTS="/opt/defects4j/framework/projects"
-
-# Log file for failed checkouts
-FAILURE_LOG="$WORK_DIR/checkout_failures.log"
-echo "Checkout Failures Log - $(date)" > "$FAILURE_LOG"
-echo "========================================" >> "$FAILURE_LOG"
-
-TOTAL_ATTEMPTS=0
-SUCCESSFUL=0
-FAILED=0
-SKIPPED=0
 
 get_bug_count() {
     local PROJECT="$1"
@@ -41,43 +31,30 @@ checkout_bug() {
     local DIR_NAME="${PID}/${BID}"
     local TARGET_PATH="$WORK_DIR/$DIR_NAME"
 
-    ((TOTAL_ATTEMPTS++))
-
     if [ -d "$TARGET_PATH" ]; then
         echo "    [SKIP] $DIR_NAME already exists."
-        ((SKIPPED++))
         return 0
     fi
 
     echo "    [Checkout] $PID-${BID}b -> $TARGET_PATH"
-    
-    if /usr/local/bin/d4j-checkout "$PID"-"$BID" 2>&1; then
-        ((SUCCESSFUL++))
-        return 0
-    else
-        local EXIT_CODE=$?
-        ((FAILED++))
-        echo "    [FAIL] $PID-$BID failed with exit code $EXIT_CODE"
-        echo "$PID-$BID (exit code: $EXIT_CODE)" >> "$FAILURE_LOG"
-        return 1
-    fi
+    /usr/local/bin/d4j-checkout "$PID"-"$BID"
 }
 
 checkout_project() {
     local PROJECT_NAME="$1"
     local PROJECT_ID="$2"
-    
+
     echo "--------------------------------------------------"
     echo "Processing $PROJECT_NAME ($PROJECT_ID)"
-    
+
     local BUG_COUNT=$(get_bug_count "$PROJECT_ID")
     echo "    Found $BUG_COUNT active bugs"
-    
+
     if [ "$BUG_COUNT" -eq 0 ]; then
         echo "    [SKIP] No active bugs found for $PROJECT_ID"
         return
     fi
-    
+
     for bug in $(seq 1 "$BUG_COUNT"); do
         checkout_bug "$PROJECT_ID" "$bug"
     done
@@ -105,20 +82,4 @@ checkout_project "Commons JXPath" "JxPath"
 checkout_project "Mockito" "Mockito"
 
 echo "--------------------------------------------------"
-echo "Checkout Summary:"
-echo "  Total attempts:  $TOTAL_ATTEMPTS"
-echo "  Successful:      $SUCCESSFUL"
-echo "  Failed:          $FAILED"
-echo "  Skipped:         $SKIPPED"
-echo ""
-echo "Failed checkouts logged to: $FAILURE_LOG"
-if [ -f "$FAILURE_LOG" ]; then
-    echo ""
-    echo "Failed bugs:"
-    tail -n +3 "$FAILURE_LOG" || true
-fi
-echo "--------------------------------------------------"
-echo "Done."
-
-# Exit with 0 even if there were failures (for Docker build to continue)
-exit 0
+echo "Done with all checkouts"

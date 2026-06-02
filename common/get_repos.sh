@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 #
-# Populate project_repos/ from the local Defects4J repo bundle that is baked
-# into the image. This script never downloads anything: the bundle under base/
-# (base/defects4j-repos.zip) is the single source of truth for ALL versions.
+# Populate project_repos/ from the one provided under /opt/defects4j-repos.zip,
+# instead of downloading like the original script.
+
 set -e
 
-# Local repo bundle baked into the image (from base/defects4j-repos.zip).
+# Local repo bundle baked into the image (from common/defects4j-repos.zip).
 ARCHIVE=/opt/defects4j-repos.zip
 
 main() {

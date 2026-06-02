@@ -1,8 +1,7 @@
 # =============================================================================
 # Defects4J 1.x.x (Java 7) — self-contained, ready-to-work image.
 #
-# Build with the repository root as build context (so common/ and base/ are
-# reachable):
+# Build with the repository root as build context (so common/ is reachable):
 #   docker build -f version-1.x.x/Dockerfile -t defects4j:1.4.0 \
 #       --build-arg D4J_VERSION=1.4.0 .
 # =============================================================================
@@ -10,20 +9,13 @@ FROM ubuntu:26.04
 LABEL org.opencontainers.image.source=https://github.com/lukas-png/defects4j-docker
 LABEL org.opencontainers.image.licenses=MIT
 
-ENV DEBIAN_FRONTEND=noninteractive
-
 ARG D4J_VERSION=1.4.0
 
-ENV TZ=America/Los_Angeles
-
-
 # ---------- System deps ----------
-RUN apt-get update && apt-get install -y \
-    git subversion \
-    perl cpanminus libcrypt-dev \
-    gcc g++ make build-essential \
-    unzip curl wget ca-certificates \
-    ant maven \
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y \
+        git subversion perl cpanminus libcrypt-dev gcc g++ make \
+        build-essential unzip curl wget ca-certificates ant maven \
     && rm -rf /var/lib/apt/lists/*
 
 # ---------- Install Java 7 (Zulu OpenJDK 7) ----------
@@ -41,13 +33,10 @@ ENV PATH=${JAVA_HOME}/bin:${PATH}
 # Defects4J — clone framework and check out the target version
 # -----------------------------------------------------------------------------
 
-COPY base/defects4j-repos.zip /opt/defects4j-repos.zip
-
 WORKDIR /opt
 RUN git clone https://github.com/rjust/defects4j.git
 WORKDIR /opt/defects4j
-RUN echo "Checking out Defects4J version: v${D4J_VERSION}" && \
-    git checkout "v${D4J_VERSION}"
+RUN git checkout "v${D4J_VERSION}"
 
 # #############################################################################
 # # CONTAINER FIXES — patches to upstream Defects4J needed to build/run inside
@@ -72,25 +61,24 @@ RUN sed -i \
 
 # -----------------------------------------------------------------------------
 # Local scripts — offline init, repo extraction, and bulk checkout.
-#   get_repos.sh extracts the project repos from base/defects4j-repos.zip
+#   get_repos.sh extracts the project repos from common/defects4j-repos.zip
 #   (copied above to /opt/defects4j-repos.zip); nothing is downloaded at build time.
 # -----------------------------------------------------------------------------
 COPY version-1.x.x/init.sh         /opt/defects4j/init.sh
-COPY version-1.x.x/get_repos.sh    /opt/defects4j/project_repos/get_repos.sh
-COPY version-1.x.x/checkout_all.sh        /usr/local/bin/checkout_all.sh
+COPY common/get_repos.sh           /opt/defects4j/project_repos/get_repos.sh
+COPY common/d4j-checkout           /usr/local/bin/d4j-checkout
+COPY version-1.x.x/checkout_all.sh /usr/local/bin/checkout_all.sh
 RUN chmod +x /opt/defects4j/init.sh \
              /opt/defects4j/project_repos/get_repos.sh \
-             /usr/local/bin/checkout_all.sh && \
-    sed -i 's/\r$//' /opt/defects4j/init.sh \
-                     /opt/defects4j/project_repos/get_repos.sh \
-                     /usr/local/bin/checkout_all.sh
+             /usr/local/bin/d4j-checkout \
+             /usr/local/bin/checkout_all.sh
 
 # Bake in the local Gradle archives so init.sh can use them instead
 # of downloading from defects4j.org (~100 MB for dists). The wildcards make the
 # zips optional: when an archive is absent only the .keep placeholder is copied
 # and init.sh falls back to the remote download for that archive.
-COPY base/defects4j-gradle-dists.zip \
-     base/defects4j-gradle-deps.zip \
+COPY common/defects4j-gradle-dists.zip \
+     common/defects4j-gradle-deps.zip \
      /opt/gradle-dists/
 
 # -----------------------------------------------------------------------------
@@ -99,7 +87,9 @@ COPY base/defects4j-gradle-dists.zip \
 # Explicit Perl deps to bypass 'Configuring . failed' on newer cpanm/perl.
 RUN cpanm --notest DBI DBD::CSV URI JSON JSON::XS List::MoreUtils version \
     || { echo "--- CPANM BUILD LOG ---"; cat /root/.cpanm/work/*/build.log; exit 1; }
-RUN ./init.sh
+
+COPY common/defects4j-repos.zip /opt/defects4j-repos.zip
+RUN ./init.sh && rm /opt/defects4j-repos.zip
 
 # #############################################################################
 # # CONTAINER FIXES (part 2) — must run AFTER init.sh has populated the tree
@@ -123,46 +113,18 @@ RUN mkdir -p /opt/defects4j/major/lib/ant && \
 # #############################################################################
 
 # -----------------------------------------------------------------------------
-# Environment + helper scripts
+# Environment
 # -----------------------------------------------------------------------------
 ENV D4J_HOME=/opt/defects4j
 ENV PATH=/opt/defects4j/framework/bin:${PATH}
 ENV JAVA_TOOL_OPTIONS="-Dfile.encoding=UTF-8"
-
-# d4j-checkout <Project>-<BugID>: check out + compile a single bug (Java 7)
-RUN printf '%s\n' \
-'#!/usr/bin/env bash' \
-'set -euo pipefail' \
-'BUG="${1:-Lang-1}"' \
-'WORK="${2:-/work}"' \
-'PROJECT="${BUG%%-*}"' \
-'BID="${BUG##*-}"' \
-'' \
-'export JAVA_HOME="'"${JAVA_HOME}"'"' \
-'export PATH="$JAVA_HOME/bin:${PATH//"$JAVA_HOME\/bin:"/}"' \
-'' \
-'mkdir -p "$WORK/$PROJECT"' \
-'echo "[*] Java (should be 1.7): $(java -version 2>&1 | head -n 1)"' \
-'echo "[*] Checkout ${PROJECT}-${BID} into ${WORK}/${PROJECT}/${BID}"' \
-'defects4j checkout -p "$PROJECT" -v "${BID}b" -w "${WORK}/${PROJECT}/${BID}"' \
-'cd "${WORK}/${PROJECT}/${BID}"' \
-'echo "[*] Compile (Java 7)..."' \
-'defects4j compile' \
-'echo "[*] Done. Run tests with: defects4j test"' \
-> /usr/local/bin/d4j-checkout && chmod +x /usr/local/bin/d4j-checkout
+ENV TZ=America/Los_Angeles
 
 # -----------------------------------------------------------------------------
-# Bake the full checkout into the image, then move it to the cache so /work
-# starts empty and is seeded by the entrypoint at run time.
+# Bake the full checkout into the image at /work
 # -----------------------------------------------------------------------------
-RUN /usr/local/bin/checkout_all.sh && \
-    mkdir -p /opt/d4j-cache && \
-    mv /work/* /opt/d4j-cache/ 2>/dev/null || true
+RUN /usr/local/bin/checkout_all.sh
 
-# Ready-to-work entrypoint (seeds /work from the cache on first start)
-COPY common/entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh && sed -i 's/\r$//' /usr/local/bin/entrypoint.sh
 
 WORKDIR /work
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["bash"]

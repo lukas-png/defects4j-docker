@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+BUG="$1"
+WORK="${2:-/work}"
+PROJECT="${BUG%%-*}"
+BID="${BUG##*-}"
+
+
+echo "[*] Java version: $(unset JAVA_TOOL_OPTIONS; java -version 2>&1 | head -n 1)"
+
+echo "[*] Checkout ${PROJECT}-${BID} into ${WORK}/${PROJECT}/${BID}"
+mkdir -p "$WORK/$PROJECT"
+defects4j checkout -p "$PROJECT" -v "${BID}b" -w "${WORK}/${PROJECT}/${BID}"
+
+echo "[*] Done."

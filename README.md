@@ -7,9 +7,9 @@ a fully populated `/work`, so there is no download or compile step at startup.
 ## Requirements
 
 - Docker or Podman (`build.sh` prefers `podman`, then `docker`)
-- The base archives under `base/` (`defects4j-repos.zip` and the Gradle bundles).
+- The base archives under `common/` (`defects4j-repos.zip` and the Gradle bundles).
   They are downloaded on demand if missing; they total several hundred MB and are
-  not tracked in Git (see `base/.gitignore`).
+  not tracked in Git (see `common/.gitignore`).
 - Several GB of free disk space per image
 
 ## Building
@@ -36,7 +36,7 @@ providing a matching `version-X.x.x/` build context.
 A build takes well over an hour per version (full checkout and compile of every
 bug) and produces multi-GB images.
 
-## Using
+## Usage
 
 ```bash
 # start a container — drops you into /work
@@ -44,6 +44,7 @@ docker run --rm -it defects4j:2.0.0
 
 # work with a bug
 cd /work/Lang/1
+defects4j compile
 defects4j test
 ```
 
@@ -56,21 +57,10 @@ Included are all projects with active bugs: Chart, Math, Lang, Time, Closure,
 Cli, Codec, Collections, Compress, Csv, Gson, JacksonCore, JacksonDatabind,
 JacksonXml, Jsoup, JxPath, Mockito.
 
-### Persisting changes
-
-Mount a volume at `/work`. An empty volume is seeded from the baked-in cache
-(`/opt/d4j-cache`) on first start:
-
-```bash
-docker run --rm -it -v "$PWD/work-2.0.0:/work" defects4j:2.0.0
-```
-
 ## Notes
 
 - The timezone `TZ=America/Los_Angeles` is set for reproducible test results and
   should not be changed.
-- Checkouts that fail during the build are recorded in
-  `/work/checkout_failures.log`; they do not abort the build.
 
 ## License
 

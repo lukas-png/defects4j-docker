@@ -31,19 +31,19 @@ echo "Starting checkout in $WORK_DIR..."
 echo "--------------------------------------------------"
 echo "Closure compiler (Closure)"
 for bug in $(seq 1 133); do #133
-    checkout_bug "Closure" "$bug" || true
+    checkout_bug "Closure" "$bug"
 done
 
 echo "--------------------------------------------------"
 echo "Processing Commons Math (Math)"
 for bug in $(seq 1 106); do #106
-    checkout_bug "Math" "$bug" || true
+    checkout_bug "Math" "$bug"
 done
 
 echo "--------------------------------------------------"
 echo "Processing Mockito (Mockito)"
 for bug in $(seq 1 38); do #38
-    checkout_bug "Mockito" "$bug" || true
+    checkout_bug "Mockito" "$bug"
 done
 
 echo "--------------------------------------------------"
@@ -59,4 +59,4 @@ for bug in $(seq 1 27); do #27
 done
 
 echo "--------------------------------------------------"
-echo "Done."
+echo "Done with all checkouts"
