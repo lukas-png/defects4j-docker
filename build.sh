@@ -16,25 +16,24 @@ BUILDS=(
   "2.0.0"
 )
 
-# Base archives the Dockerfiles COPY from base/. Downloaded on demand when
-# missing (see base/.gitignore for the same URLs). Format: "file|url".
+# Base archives the Dockerfiles COPY from common/. Downloaded on demand when
+# missing (see common/.gitignore for the same URLs). Format: "file|url".
 BASE_ZIPS=(
-  "defects4j-repos.zip|https://defects4j.org/downloads/defects4j-repos.zip"
-  "defects4j-gradle-dists.zip|https://defects4j.org/downloads/defects4j-gradle-dists.zip"
-  "defects4j-gradle-deps.zip|https://defects4j.org/downloads/defects4j-gradle-deps.zip"
+  "https://defects4j.org/downloads/defects4j-repos.zip"
+  "https://defects4j.org/downloads/defects4j-gradle-dists.zip"
+  "https://defects4j.org/downloads/defects4j-gradle-deps.zip"
 )
 
-# Fetch any base/*.zip that is absent so a clean checkout can build without
+# Fetch any common/*.zip that is absent so a clean checkout can build without
 # manual downloads. Existing (non-empty) archives are left untouched.
 ensure_base_zips() {
-    local entry file url dest tmp
-    for entry in "${BASE_ZIPS[@]}"; do
-        file="${entry%%|*}"
-        url="${entry#*|}"
-        dest="$BASE_DIR/base/$file"
+    local file url dest tmp
+    for url in "${BASE_ZIPS[@]}"; do
+        file="${url##*/}"
+        dest="$BASE_DIR/common/$file"
 
         if [[ -s "$dest" ]]; then
-            green "base/$file present"
+            green "common/$file present"
             continue
         fi
 
@@ -49,7 +48,7 @@ ensure_base_zips() {
             exit 1
         fi
         mv "$tmp" "$dest"
-        green "Downloaded base/$file"
+        green "Downloaded common/$file"
     done
 }
 
