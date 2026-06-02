@@ -1,9 +1,8 @@
 # =============================================================================
-# Defects4J 1.x.x (Java 7) — self-contained, ready-to-work image.
+# Defects4J 0.x.x & 1.x.x (Java 7) — self-contained, ready-to-work image.
 #
 # Build with the repository root as build context (so common/ is reachable):
-#   docker build -f version-1.x.x/Dockerfile -t defects4j:1.4.0 \
-#       --build-arg D4J_VERSION=1.4.0 .
+#   docker build -f version-1.x.x/Dockerfile -t defects4j:1.4.0 --build-arg D4J_VERSION=1.4.0 .
 # =============================================================================
 FROM ubuntu:26.04
 LABEL org.opencontainers.image.source=https://github.com/lukas-png/defects4j-docker
@@ -28,6 +27,13 @@ RUN mkdir -p /opt/jdks && \
 
 ENV JAVA_HOME=/opt/jdks/zulu7.56.0.11-ca-jdk7.0.352-linux_x64
 ENV PATH=${JAVA_HOME}/bin:${PATH}
+
+# -----------------------------------------------------------------------------
+# Perl dependencies
+# -----------------------------------------------------------------------------
+# Explicit Perl deps to bypass 'Configuring . failed' on newer cpanm/perl.
+RUN cpanm --notest DBI DBD::CSV URI JSON JSON::XS List::MoreUtils version \
+    || { echo "--- CPANM BUILD LOG ---"; cat /root/.cpanm/work/*/build.log; exit 1; }
 
 # -----------------------------------------------------------------------------
 # Defects4J — clone framework and check out the target version
@@ -82,12 +88,8 @@ COPY common/defects4j-gradle-dists.zip \
      /opt/gradle-dists/
 
 # -----------------------------------------------------------------------------
-# Perl dependencies + Defects4J initialization (Java 7)
+# Defects4J initialization
 # -----------------------------------------------------------------------------
-# Explicit Perl deps to bypass 'Configuring . failed' on newer cpanm/perl.
-RUN cpanm --notest DBI DBD::CSV URI JSON JSON::XS List::MoreUtils version \
-    || { echo "--- CPANM BUILD LOG ---"; cat /root/.cpanm/work/*/build.log; exit 1; }
-
 COPY common/defects4j-repos.zip /opt/defects4j-repos.zip
 RUN ./init.sh && rm /opt/defects4j-repos.zip
 
@@ -123,7 +125,11 @@ ENV TZ=America/Los_Angeles
 # -----------------------------------------------------------------------------
 # Bake the full checkout into the image at /work
 # -----------------------------------------------------------------------------
-RUN /usr/local/bin/checkout_all.sh
+RUN if [[ "$D4J_VERSION" == 1.* ]]; then \
+        /usr/local/bin/checkout_all.sh Chart Closure Math Mockito Lang Time; \
+    else \
+        /usr/local/bin/checkout_all.sh Chart Closure Math Lang Time; \
+    fi
 
 
 WORKDIR /work

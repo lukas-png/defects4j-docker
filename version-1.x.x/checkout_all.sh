@@ -20,42 +20,29 @@ checkout_bug() {
     /usr/local/bin/d4j-checkout "$PID"-"$BID"
 }
 
-echo "Starting checkout in $WORK_DIR..."
-echo "--------------------------------------------------"
-echo "Processing JFreeChart (Chart)"
-for bug in $(seq 1 26); do #26
-    checkout_bug "Chart" "$bug"
-done
+declare -A BUG_COUNTS=(
+    [Chart]=26
+    [Closure]=133
+    [Math]=106
+    [Mockito]=38
+    [Lang]=65
+    [Time]=27
+)
 
-echo "Starting checkout in $WORK_DIR..."
-echo "--------------------------------------------------"
-echo "Closure compiler (Closure)"
-for bug in $(seq 1 133); do #133
-    checkout_bug "Closure" "$bug"
-done
+for project in "$@"; do
+    count="${BUG_COUNTS[$project]}"
 
-echo "--------------------------------------------------"
-echo "Processing Commons Math (Math)"
-for bug in $(seq 1 106); do #106
-    checkout_bug "Math" "$bug"
-done
+    if [ -z "$count" ]; then
+        echo "Unknown project: $project" >&2
+        exit 1
+    fi
 
-echo "--------------------------------------------------"
-echo "Processing Mockito (Mockito)"
-for bug in $(seq 1 38); do #38
-    checkout_bug "Mockito" "$bug"
-done
+    echo "--------------------------------------------------"
+    echo "Processing $project ($count bugs)"
 
-echo "--------------------------------------------------"
-echo "Processing Apache Commons Lang (Lang)"
-for bug in $(seq 1 65); do #65
-    checkout_bug "Lang" "$bug"
-done
-
-echo "--------------------------------------------------"
-echo "Processing Joda Time (Time)"
-for bug in $(seq 1 27); do #27
-    checkout_bug "Time" "$bug"
+    for bug in $(seq 1 "$count"); do
+        checkout_bug "$project" "$bug"
+    done
 done
 
 echo "--------------------------------------------------"

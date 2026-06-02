@@ -72,7 +72,7 @@ main() {
     cd "$BASE" && wget -nv -N "$MAJOR_URL/$MAJOR_ZIP" \
            && unzip -o "$MAJOR_ZIP" > /dev/null \
            && rm "$MAJOR_ZIP" \
-           && cp major/bin/.ant major/bin/ant
+           && test -d major/bin/.ant && cp -r major/bin/.ant major/bin/ant
 
     ############################################################################
     #
@@ -182,17 +182,6 @@ main() {
     echo
     echo "Defects4J successfully initialized."
     echo
-    echo "|------------------------------------------------------------------------|"
-    echo "|                           Defects4J version 1                          |"
-    echo "|------------------------------------------------------------------------|"
-    echo "| PLEASE READ:                                                           |"
-    echo "| https://github.com/rjust/defects4j/?tab=readme-ov-file#reproducibility |"
-    echo "|------------------------------------------------------------------------|"
-    echo "| Important changes:                                                     |"
-    echo "|   * Java 7 is required                                                 |"
-    echo "|   * Randoop v4.0.4                                                     |"
-    echo "|   * Major v1.3.4                                                       |"
-    echo "|------------------------------------------------------------------------|"
 }
 
 ################################################################################
