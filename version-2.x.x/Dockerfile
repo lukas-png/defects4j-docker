@@ -78,7 +78,7 @@ ENV TZ=America/Los_Angeles
 # Pass --build-arg CHECKOUT_BUGS=true to enable (>1h build, multi-GB image).
 # -----------------------------------------------------------------------------
 RUN if [ "$CHECKOUT_BUGS" = "true" ]; then \
-        /usr/local/bin/checkout_all.sh \
+        /usr/local/bin/checkout_all.sh; \
     fi
 
 
