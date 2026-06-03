@@ -49,9 +49,10 @@ RUN sed -i 's|git clone $self->{repo}|git clone --no-hardlinks $self->{repo}|' \
 # -----------------------------------------------------------------------------
 # Use custom get_repos.sh which uses provided defects4j-repos.zip
 COPY common/get_repos.sh        /opt/defects4j/project_repos/get_repos.sh
-COPY common/defects4j-repos.zip /opt/defects4j-repos.zip
 RUN chmod +x /opt/defects4j/project_repos/get_repos.sh
+COPY common/defects4j-repos.zip /opt/defects4j-repos.zip
 RUN ./init.sh && rm /opt/defects4j-repos.zip
+
 
 # -----------------------------------------------------------------------------
 # Helper scripts
@@ -68,6 +69,7 @@ RUN chmod +x /usr/local/bin/d4j-checkout \
 ENV D4J_HOME=/opt/defects4j
 ENV PATH=/opt/defects4j/framework/bin:${PATH}
 ENV TZ=America/Los_Angeles
+
 
 WORKDIR /work
 CMD ["bash"]

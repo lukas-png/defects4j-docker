@@ -27,8 +27,6 @@ RUN mkdir -p /opt/jdks && \
     curl -fsSL "https://cdn.azul.com/zulu/bin/${ZULU7_TGZ}" -o "/tmp/${ZULU7_TGZ}" && \
     tar -xzf "/tmp/${ZULU7_TGZ}" -C /opt/jdks && \
     rm -f "/tmp/${ZULU7_TGZ}" 
-
-
 ENV JAVA_HOME=/opt/jdks/zulu7.56.0.11-ca-jdk7.0.352-linux_x64
 ENV PATH=${JAVA_HOME}/bin:${PATH}
 
@@ -42,7 +40,6 @@ RUN cpanm --notest DBI DBD::CSV URI JSON JSON::XS List::MoreUtils version \
 # -----------------------------------------------------------------------------
 # Defects4J — clone framework and check out the target version
 # -----------------------------------------------------------------------------
-
 WORKDIR /opt
 RUN git clone https://github.com/rjust/defects4j.git
 WORKDIR /opt/defects4j
@@ -88,16 +85,6 @@ RUN chmod +x /opt/defects4j/init.sh \
 COPY common/defects4j-repos.zip /opt/defects4j-repos.zip
 RUN ./init.sh && rm /opt/defects4j-repos.zip
 
-
-# -----------------------------------------------------------------------------
-# Helper scripts
-# -----------------------------------------------------------------------------
-COPY common/d4j-checkout                /usr/local/bin/d4j-checkout
-COPY version-1.x.x/d4j-checkout-project /usr/local/bin/d4j-checkout-project
-RUN chmod +x /usr/local/bin/d4j-checkout \
-             /usr/local/bin/d4j-checkout-project
-
-
 ###############################################################################
 # CONTAINER FIXES — patches to upstream Defects4J needed to run inside Docker.
 # These do NOT exist upstream; everything outside this block is stock setup.
@@ -120,6 +107,16 @@ RUN mkdir -p /opt/defects4j/major/lib/ant && \
 ###############################################################################
 # END CONTAINER FIXES (part 2)
 ###############################################################################
+
+
+# -----------------------------------------------------------------------------
+# Helper scripts
+# -----------------------------------------------------------------------------
+COPY common/d4j-checkout                /usr/local/bin/d4j-checkout
+COPY version-1.x.x/d4j-checkout-project /usr/local/bin/d4j-checkout-project
+RUN chmod +x /usr/local/bin/d4j-checkout \
+             /usr/local/bin/d4j-checkout-project
+
 
 # -----------------------------------------------------------------------------
 # Environment
