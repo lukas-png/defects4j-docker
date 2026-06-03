@@ -1,5 +1,5 @@
 # =============================================================================
-# Defects4J 0.x.x & 1.x.x (Java 7) — self-contained, ready-to-work image.
+# Defects4J 0.* & 1.* (Java 7) — self-contained, ready-to-work image.
 #
 # Build with the repository root as build context (so common/ is reachable):
 #   docker build -f version-1.x.x/Dockerfile -t defects4j:1.4.0 --build-arg D4J_VERSION=1.4.0 .
@@ -10,14 +10,18 @@ LABEL org.opencontainers.image.licenses=MIT
 
 ARG D4J_VERSION=1.4.0
 
-# ---------- System deps ----------
+# -----------------------------------------------------------------------------
+# System dependencies
+# -----------------------------------------------------------------------------
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y \
         git subversion perl cpanminus libcrypt-dev gcc g++ make \
         build-essential unzip curl wget ca-certificates ant maven \
     && rm -rf /var/lib/apt/lists/*
 
-# ---------- Install Java 7 (Zulu OpenJDK 7) ----------
+# -----------------------------------------------------------------------------
+# Java 7 (Zulu OpenJDK 7)
+# -----------------------------------------------------------------------------
 ENV ZULU7_TGZ=zulu7.56.0.11-ca-jdk7.0.352-linux_x64.tar.gz
 RUN mkdir -p /opt/jdks && \
     curl -fsSL "https://cdn.azul.com/zulu/bin/${ZULU7_TGZ}" -o "/tmp/${ZULU7_TGZ}" && \
@@ -44,11 +48,11 @@ RUN git clone https://github.com/rjust/defects4j.git
 WORKDIR /opt/defects4j
 RUN git checkout "v${D4J_VERSION}"
 
-# #############################################################################
-# # CONTAINER FIXES — patches to upstream Defects4J needed to build/run inside
-# # Docker. These do NOT exist upstream; everything outside the fix blocks is
-# # stock Defects4J setup. (A second fix block follows after init.sh.)
-# #############################################################################
+###############################################################################
+# CONTAINER FIXES — patches to upstream Defects4J needed to run inside Docker.
+# These do NOT exist upstream; everything outside this block is stock setup.
+# (first block BEFORE init.sh is run)
+###############################################################################
 
 # FIX: Defects4J creates per-bug working copies with `git clone`, which uses
 #      hardlinks by default and fails across Docker's overlay layers.
@@ -61,24 +65,13 @@ RUN sed -i \
     's/git --work-tree=\$work_dir apply --directory=/git --work-tree=\$work_dir apply --unsafe-paths --directory=/' \
     /opt/defects4j/framework/core/Vcs/Git.pm
 
-# #############################################################################
-# # END CONTAINER FIXES (part 1)
-# #############################################################################
+###############################################################################
+# END CONTAINER FIXES
+###############################################################################
 
 # -----------------------------------------------------------------------------
-# Local scripts — offline init, repo extraction, and bulk checkout.
-#   get_repos.sh extracts the project repos from common/defects4j-repos.zip
-#   (copied above to /opt/defects4j-repos.zip); nothing is downloaded at build time.
+# Defects4J initialization
 # -----------------------------------------------------------------------------
-COPY version-1.x.x/init.sh         /opt/defects4j/init.sh
-COPY common/get_repos.sh           /opt/defects4j/project_repos/get_repos.sh
-COPY common/d4j-checkout           /usr/local/bin/d4j-checkout
-COPY version-1.x.x/checkout_all.sh /usr/local/bin/checkout_all.sh
-RUN chmod +x /opt/defects4j/init.sh \
-             /opt/defects4j/project_repos/get_repos.sh \
-             /usr/local/bin/d4j-checkout \
-             /usr/local/bin/checkout_all.sh
-
 # Bake in the local Gradle archives so init.sh can use them instead
 # of downloading from defects4j.org (~100 MB for dists). The wildcards make the
 # zips optional: when an archive is absent only the .keep placeholder is copied
@@ -86,16 +79,30 @@ RUN chmod +x /opt/defects4j/init.sh \
 COPY common/defects4j-gradle-dists.zip \
      common/defects4j-gradle-deps.zip \
      /opt/gradle-dists/
-
-# -----------------------------------------------------------------------------
-# Defects4J initialization
-# -----------------------------------------------------------------------------
+# Use custom init.sh TODO why?
+COPY version-1.x.x/init.sh      /opt/defects4j/init.sh
+# Use custom get_repos.sh which uses provided defects4j-repos.zip
+COPY common/get_repos.sh        /opt/defects4j/project_repos/get_repos.sh
+RUN chmod +x /opt/defects4j/init.sh \
+             /opt/defects4j/project_repos/get_repos.sh \
 COPY common/defects4j-repos.zip /opt/defects4j-repos.zip
 RUN ./init.sh && rm /opt/defects4j-repos.zip
 
-# #############################################################################
-# # CONTAINER FIXES (part 2) — must run AFTER init.sh has populated the tree
-# #############################################################################
+
+# -----------------------------------------------------------------------------
+# Helper scripts
+# -----------------------------------------------------------------------------
+COPY common/d4j-checkout                /usr/local/bin/d4j-checkout
+COPY version-1.x.x/d4j-checkout-project /usr/local/bin/d4j-checkout-project
+RUN chmod +x /usr/local/bin/d4j-checkout \
+             /usr/local/bin/d4j-checkout-project
+
+
+###############################################################################
+# CONTAINER FIXES — patches to upstream Defects4J needed to run inside Docker.
+# These do NOT exist upstream; everything outside this block is stock setup.
+# (second block AFTER init.sh has run)
+###############################################################################
 
 # FIX: Math's build.xml uses a <scriptdef language="javascript"> target that
 #      needs a JSR-223/BSF JS engine, which is absent on Zulu JDK 7 + Major's
@@ -110,9 +117,9 @@ RUN mkdir -p /opt/defects4j/major/lib/ant && \
     curl -fsSL https://repo1.maven.org/maven2/ant-contrib/ant-contrib/1.0b3/ant-contrib-1.0b3.jar \
         -o /opt/defects4j/major/lib/ant/ant-contrib-1.0b3.jar
 
-# #############################################################################
-# # END CONTAINER FIXES (part 2)
-# #############################################################################
+###############################################################################
+# END CONTAINER FIXES (part 2)
+###############################################################################
 
 # -----------------------------------------------------------------------------
 # Environment
