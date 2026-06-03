@@ -8,9 +8,6 @@ FROM ubuntu:26.04
 LABEL org.opencontainers.image.source=https://github.com/lukas-png/defects4j-docker
 LABEL org.opencontainers.image.licenses=MIT
 
-ARG D4J_VERSION=2.0.0
-ARG CHECKOUT_BUGS=false
-
 # -----------------------------------------------------------------------------
 # System dependencies + Java 8
 # -----------------------------------------------------------------------------
@@ -26,6 +23,7 @@ ENV PATH=${JAVA_HOME}/bin:${PATH}
 # -----------------------------------------------------------------------------
 # Defects4J
 # -----------------------------------------------------------------------------
+ARG D4J_VERSION=2.0.0
 WORKDIR /opt
 RUN curl -L https://github.com/rjust/defects4j/archive/refs/tags/v${D4J_VERSION}.tar.gz \
     | tar -xz && \
@@ -77,6 +75,7 @@ ENV TZ=America/Los_Angeles
 # Optionally bake the full checkout into the image at /work.
 # Pass --build-arg CHECKOUT_BUGS=true to enable (>1h build, multi-GB image).
 # -----------------------------------------------------------------------------
+ARG CHECKOUT_BUGS=false
 RUN if [ "$CHECKOUT_BUGS" = "true" ]; then \
         /usr/local/bin/checkout_all.sh; \
     fi
