@@ -2,7 +2,16 @@
 set -euo pipefail
 
 BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-FILTER="${1:-}"
+REGISTRY="${REGISTRY:-ghcr.io/lukas-png/defects4j-docker}"
+
+PUSH=0
+FILTER=""
+for arg in "$@"; do
+    case "$arg" in
+        --push) PUSH=1 ;;
+        *)      FILTER="$arg" ;;
+    esac
+done
 
 cyan() { printf '\033[36m%b\033[0m\n' "$*"; }
 green() { printf '\033[32m%b\033[0m\n' "$*"; }
@@ -87,23 +96,29 @@ fi
 
 
 built=()
+pushed=()
 for ver in "${BUILDS[@]}"; do
     [[ -n "$FILTER" && ! "$ver" =~ ^$FILTER ]] && continue
 
     ctx="$(ctx_for_version "$ver")"
-    tag="defects4j:$ver"
+    local_tag="defects4j:$ver"
 
-    cyan "\nBuilding $tag (Defects4J $ver) from $ctx with $ENGINE"
-    if "$ENGINE" build \
+    cyan "\nBuilding $local_tag (Defects4J $ver) from $ctx with $ENGINE"
+    "$ENGINE" build \
         --build-arg D4J_VERSION="$ver" \
         -f "$BASE_DIR/$ctx/Dockerfile" \
-        -t "$tag" \
-        "$BASE_DIR"; then
-        green "Built $tag"
-        built+=("$tag")
-    else
-        red "Failed to build $tag"
-        exit 1
+        -t "$local_tag" \
+        "$BASE_DIR" || { red "Failed to build $local_tag"; exit 1; }
+    green "Built $local_tag"
+    built+=("$local_tag")
+
+    if [[ "$PUSH" -eq 1 ]]; then
+        remote_tag="$REGISTRY:$ver"
+        "$ENGINE" tag "$local_tag" "$remote_tag"
+        cyan "Pushing $remote_tag"
+        "$ENGINE" push "$remote_tag"
+        green "Pushed  $remote_tag"
+        pushed+=("$remote_tag")
     fi
 done
 
@@ -112,7 +127,13 @@ if [[ ${#built[@]} -eq 0 ]]; then
     exit 1
 fi
 
-green "\nAll requested images built:"
-printf '  - %s\n' "${built[@]}"
-echo
-echo "Run one with e.g.: $ENGINE run --rm -it ${built[0]}"
+
+if [[ "$PUSH" -eq 1 ]]; then
+    green "\nAll images pushed to $REGISTRY:"
+    printf '  - %s\n' "${pushed[@]}"
+else
+    green "\nAll requested images built:"
+    printf '  - %s\n' "${built[@]}"
+    echo
+    echo "Run one with e.g.: $ENGINE run --rm -it ${built[0]}"
+fi
