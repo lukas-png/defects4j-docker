@@ -5,11 +5,13 @@ BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REGISTRY="${REGISTRY:-ghcr.io/lukas-png/defects4j-docker}"
 
 PUSH=0
+CHECKOUT_ALL=0
 FILTER=""
 for arg in "$@"; do
     case "$arg" in
-        --push) PUSH=1 ;;
-        *)      FILTER="$arg" ;;
+        --push)         PUSH=1 ;;
+        --checkout-all) CHECKOUT_ALL=1 ;;
+        *)              FILTER="$arg" ;;
     esac
 done
 
@@ -106,6 +108,7 @@ for ver in "${BUILDS[@]}"; do
     cyan "\nBuilding $local_tag (Defects4J $ver) from $ctx with $ENGINE"
     "$ENGINE" build \
         --build-arg D4J_VERSION="$ver" \
+        --build-arg CHECKOUT_BUGS="$( [[ "$CHECKOUT_ALL" -eq 1 ]] && echo true || echo false )" \
         -f "$BASE_DIR/$ctx/Dockerfile" \
         -t "$local_tag" \
         "$BASE_DIR" || { red "Failed to build $local_tag"; exit 1; }

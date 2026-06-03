@@ -9,6 +9,7 @@ LABEL org.opencontainers.image.source=https://github.com/lukas-png/defects4j-doc
 LABEL org.opencontainers.image.licenses=MIT
 
 ARG D4J_VERSION=2.0.0
+ARG CHECKOUT_BUGS=false
 
 # -----------------------------------------------------------------------------
 # System dependencies + Java 8
@@ -70,6 +71,15 @@ RUN chmod +x /usr/local/bin/d4j-checkout \
 ENV D4J_HOME=/opt/defects4j
 ENV PATH=/opt/defects4j/framework/bin:${PATH}
 ENV TZ=America/Los_Angeles
+
+
+# -----------------------------------------------------------------------------
+# Optionally bake the full checkout into the image at /work.
+# Pass --build-arg CHECKOUT_BUGS=true to enable (>1h build, multi-GB image).
+# -----------------------------------------------------------------------------
+RUN if [ "$CHECKOUT_BUGS" = "true" ]; then \
+        /usr/local/bin/checkout_all.sh \
+    fi
 
 
 WORKDIR /work
