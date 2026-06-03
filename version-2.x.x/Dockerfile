@@ -23,12 +23,13 @@ ENV JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
 ENV PATH=${JAVA_HOME}/bin:${PATH}
 
 # -----------------------------------------------------------------------------
-# Defects4J — clone framework and check out the target version
+# Defects4J
 # -----------------------------------------------------------------------------
 WORKDIR /opt
-RUN git clone https://github.com/rjust/defects4j.git
+RUN curl -L https://github.com/rjust/defects4j/archive/refs/tags/v${D4J_VERSION}.tar.gz \
+    | tar -xz && \
+    mv defects4j-${D4J_VERSION} defects4j
 WORKDIR /opt/defects4j
-RUN git checkout "v${D4J_VERSION}"
 
 ###############################################################################
 # CONTAINER FIXES — patches to upstream Defects4J needed to run inside Docker.
