@@ -82,7 +82,7 @@ COPY version-1.x.x/init.sh      /opt/defects4j/init.sh
 # Use custom get_repos.sh which uses provided defects4j-repos.zip
 COPY common/get_repos.sh        /opt/defects4j/project_repos/get_repos.sh
 RUN chmod +x /opt/defects4j/init.sh \
-             /opt/defects4j/project_repos/get_repos.sh \
+             /opt/defects4j/project_repos/get_repos.sh
 COPY common/defects4j-repos.zip /opt/defects4j-repos.zip
 RUN ./init.sh && rm /opt/defects4j-repos.zip
 
