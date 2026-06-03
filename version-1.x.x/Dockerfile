@@ -122,15 +122,6 @@ ENV PATH=/opt/defects4j/framework/bin:${PATH}
 ENV JAVA_TOOL_OPTIONS="-Dfile.encoding=UTF-8"
 ENV TZ=America/Los_Angeles
 
-# -----------------------------------------------------------------------------
-# Bake the full checkout into the image at /work
-# -----------------------------------------------------------------------------
-RUN if [[ "$D4J_VERSION" == 1.* ]]; then \
-        /usr/local/bin/checkout_all.sh Chart Closure Math Mockito Lang Time; \
-    else \
-        /usr/local/bin/checkout_all.sh Chart Closure Math Lang Time; \
-    fi
-
 
 WORKDIR /work
 CMD ["bash"]
