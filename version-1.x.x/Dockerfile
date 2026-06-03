@@ -123,8 +123,8 @@ RUN chmod +x /usr/local/bin/d4j-checkout \
 # -----------------------------------------------------------------------------
 ENV D4J_HOME=/opt/defects4j
 ENV PATH=/opt/defects4j/framework/bin:${PATH}
-ENV JAVA_TOOL_OPTIONS="-Dfile.encoding=UTF-8"
 ENV TZ=America/Los_Angeles
+ENV _JAVA_OPTIONS="-XX:MaxPermSize=1g -Xmx3g"
 
 
 # -----------------------------------------------------------------------------
