@@ -12,5 +12,6 @@ echo "[*] Java version: $(unset JAVA_TOOL_OPTIONS; java -version 2>&1 | head -n 
 echo "[*] Checkout ${PROJECT}-${BID} into ${WORK}/${PROJECT}/${BID}"
 mkdir -p "$WORK/$PROJECT"
 defects4j checkout -p "$PROJECT" -v "${BID}b" -w "${WORK}/${PROJECT}/${BID}"
-
-echo "[*] Done."
+echo "[*] Compile..."
+defects4j compile
+echo "[*] Done. Run tests with: defects4j test"
