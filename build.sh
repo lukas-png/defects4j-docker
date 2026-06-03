@@ -23,8 +23,23 @@ red() { printf '\033[31m%b\033[0m\n' "$*"; }
 # Defects4J versions
 BUILDS=(
   "0.1.0"
+  "0.2.0"
+
+  "1.0.0"
+  "1.0.1"
+  "1.1.0"
+  "1.2.0"
+  "1.3.0"
+  "1.3.1"
   "1.4.0"
+  "1.5.0"
+
   "2.0.0"
+  "2.0.1"
+  "2.1.0"
+
+  #"3.0.0"
+  #"3.0.1"
 )
 
 # Base archives the Dockerfiles COPY from common/. Downloaded on demand when

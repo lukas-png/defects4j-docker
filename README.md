@@ -21,8 +21,26 @@ defects4j test
 | Image tag | Defects4J | Java   |
 |-----------|-----------|--------|
 | `0.1.0`   | 0.1.0     | Java 7 |
+| `0.2.0`   | 0.2.0     | Java 7 |
+| `1.0.0`   | 1.0.0     | Java 7 |
+| `1.0.1`   | 1.0.1     | Java 7 |
+| `1.1.0`   | 1.1.0     | Java 7 |
+| `1.2.0`   | 1.2.0     | Java 7 |
+| `1.3.0`   | 1.3.0     | Java 7 |
+| `1.3.1`   | 1.3.1     | Java 7 |
 | `1.4.0`   | 1.4.0     | Java 7 |
-| `2.0.0`   | 2.0.0     | Java 8 |
+| `1.5.0`   | 1.5.0     | Java 7 |
+| `2.0.0`   | 2.0.0     | **Java 8** |
+| `2.0.1`   | 2.0.1     | Java 8 |
+| `2.1.0`   | 2.1.0     | Java 8 |
+
+Not yet supported, work in progress:
+
+| Image tag | Defects4J | Java    |
+|-----------|-----------|---------|
+| `3.0.0`   | 3.0.0     | Java 11 |
+| `3.0.1`   | 3.0.1     | Java 11 |
+
 
 More versions can be added by extending the `BUILDS` array in `build.sh` and
 providing a matching `version-X.x.x/` build context.
