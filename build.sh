@@ -48,7 +48,9 @@ BASE_ZIPS=(
   "https://defects4j.org/downloads/defects4j-repos.zip"
   "https://defects4j.org/downloads/defects4j-repos-v3.zip"
   "https://defects4j.org/downloads/defects4j-gradle-dists.zip"
+  "https://defects4j.org/downloads/defects4j-gradle-dists-v3.zip"
   "https://defects4j.org/downloads/defects4j-gradle-deps.zip"
+  "https://defects4j.org/downloads/defects4j-gradle-deps-v3.zip"
 
   "https://cdn.azul.com/zulu/bin/zulu7.56.0.11-ca-jdk7.0.352-linux_x64.tar.gz"
   "https://archive.apache.org/dist/ant/binaries/apache-ant-1.9.16-bin.tar.gz"

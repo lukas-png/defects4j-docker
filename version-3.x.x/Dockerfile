@@ -74,11 +74,11 @@ COPY common/defects4j-repos-v3.zip /tmp/
 RUN unzip -q /tmp/defects4j-repos-v3.zip -d /opt && \
     rm /tmp/defects4j-repos-v3.zip
 RUN mkdir -p /opt/defects4j/framework/lib/build_systems/gradle/dists
-COPY common/defects4j-gradle-dists.zip /tmp/
-COPY common/defects4j-gradle-deps.zip /tmp/
-RUN unzip -q /tmp/defects4j-gradle-dists.zip -d /opt/defects4j/framework/lib/build_systems/gradle/dists && \
-    unzip -q /tmp/defects4j-gradle-deps.zip -d /opt/defects4j/framework/lib/build_systems/gradle && \
-    rm /tmp/defects4j-gradle-dists.zip /tmp/defects4j-gradle-deps.zip
+COPY common/defects4j-gradle-dists-v3.zip /tmp/
+COPY common/defects4j-gradle-deps-v3.zip /tmp/
+RUN unzip -q /tmp/defects4j-gradle-dists-v3.zip -d /opt/defects4j/framework/lib/build_systems/gradle/dists && \
+    unzip -q /tmp/defects4j-gradle-deps-v3.zip -d /opt/defects4j/framework/lib/build_systems/gradle && \
+    rm /tmp/defects4j-gradle-dists-v3.zip /tmp/defects4j-gradle-deps-v3.zip
 
 
 # -----------------------------------------------------------------------------
