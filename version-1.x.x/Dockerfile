@@ -36,12 +36,13 @@ ENV ANT_HOME=/opt/apache-ant-${ANT_VERSION}
 
 ENV PATH=${ANT_HOME}/bin:${JAVA_HOME}/bin:${PATH}
 
+
 # -----------------------------------------------------------------------------
 # Perl dependencies
 # -----------------------------------------------------------------------------
-# Explicit Perl deps to bypass 'Configuring . failed' on newer cpanm/perl.
-RUN cpanm --notest DBI DBD::CSV URI JSON JSON::XS List::MoreUtils version \
+RUN cpanm --notest DBI DBD::CSV URI JSON JSON::Parse List::Util \
     || { echo "--- CPANM BUILD LOG ---"; cat /root/.cpanm/work/*/build.log; exit 1; }
+
 
 # -----------------------------------------------------------------------------
 # Defects4J
@@ -84,6 +85,7 @@ RUN sed -i \
 # END CONTAINER FIXES
 ###############################################################################
 
+
 # -----------------------------------------------------------------------------
 # Defects4J initialization
 # -----------------------------------------------------------------------------
@@ -111,7 +113,6 @@ RUN unzip -q /tmp/defects4j-gradle-dists.zip -d /opt/defects4j/framework/lib/bui
     unzip -q /tmp/defects4j-gradle-deps.zip -d /opt/defects4j/framework/lib/build_systems/gradle && \
     rm /tmp/defects4j-gradle-dists.zip /tmp/defects4j-gradle-deps.zip
 
-
 ###############################################################################
 # CONTAINER FIXES — patches to upstream Defects4J needed to run inside Docker.
 # These do NOT exist upstream; everything outside this block is stock setup.
@@ -125,11 +126,6 @@ RUN sed -i '/<scriptdef name="hastarget"/,/<\/scriptdef>/d' \
         /opt/defects4j/framework/projects/Math/Math.build.xml && \
     sed -i '/<hastarget /d' \
         /opt/defects4j/framework/projects/Math/Math.build.xml
-
-# FIX: Major's Ant integration references ant-contrib, which is not bundled.
-RUN mkdir -p /opt/defects4j/major/lib/ant
-COPY common/ant-contrib-1.0b3.jar /opt/defects4j/major/lib/ant/
-
 
 ###############################################################################
 # END CONTAINER FIXES (part 2)

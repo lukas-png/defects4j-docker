@@ -12,22 +12,30 @@ LABEL org.opencontainers.image.licenses=MIT
 # System dependencies + Java 8
 # -----------------------------------------------------------------------------
 RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y \
-        git subversion perl cpanminus libdbi-perl openjdk-8-jdk  gcc g++ make \
-        build-essential unzip curl wget ca-certificates \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        perl cpanminus build-essential libcrypt-dev git subversion unzip \
+        openjdk-8-jdk ant ant-optional \
     && rm -rf /var/lib/apt/lists/*
-
 ENV JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
 ENV PATH=${JAVA_HOME}/bin:${PATH}
+
+
+# -----------------------------------------------------------------------------
+# Perl dependencies
+# -----------------------------------------------------------------------------
+RUN cpanm --notest DBI DBD::CSV URI JSON JSON::Parse List::Util \
+    || { echo "--- CPANM BUILD LOG ---"; cat /root/.cpanm/work/*/build.log; exit 1; }
+
 
 # -----------------------------------------------------------------------------
 # Defects4J
 # -----------------------------------------------------------------------------
 ARG D4J_VERSION=2.0.0
 WORKDIR /opt
-RUN curl -L https://github.com/rjust/defects4j/archive/refs/tags/v${D4J_VERSION}.tar.gz \
-    | tar -xz && \
-    mv defects4j-${D4J_VERSION} defects4j
+ADD https://github.com/rjust/defects4j/archive/refs/tags/v${D4J_VERSION}.tar.gz /tmp/
+RUN tar -xzf /tmp/v${D4J_VERSION}.tar.gz && \
+    mv defects4j-${D4J_VERSION} defects4j && \
+    rm /tmp/v${D4J_VERSION}.tar.gz
 WORKDIR /opt/defects4j
 
 ###############################################################################
@@ -40,18 +48,38 @@ WORKDIR /opt/defects4j
 RUN sed -i 's|git clone $self->{repo}|git clone --no-hardlinks $self->{repo}|' \
     /opt/defects4j/framework/core/Vcs/Git.pm
 
+# Don't check for Major or test generation tool existence; not needed for base
+# Defects4J functionality
+RUN sed -i \
+    '/-e "\$MAJOR_ROOT\/bin\/ant"/{N;d;}' \
+     /opt/defects4j/framework/core/Constants.pm
+RUN sed -i \
+    '/-d "\$TESTGEN_LIB_DIR"/{N;d;}' \
+     /opt/defects4j/framework/core/Constants.pm
+
+# Use installed Ant
+RUN sed -i \
+    's|\$MAJOR_ROOT/bin/ant|ant|g' \
+    /opt/defects4j/framework/core/Project.pm
+
 ###############################################################################
 # END CONTAINER FIXES
 ###############################################################################
 
+
 # -----------------------------------------------------------------------------
 # Defects4J initialization
 # -----------------------------------------------------------------------------
-# Use custom get_repos.sh which uses provided defects4j-repos.zip
-COPY common/get_repos.sh        /opt/defects4j/project_repos/get_repos.sh
-RUN chmod +x /opt/defects4j/project_repos/get_repos.sh
-COPY common/defects4j-repos.zip /opt/defects4j-repos.zip
-RUN ./init.sh && rm /opt/defects4j-repos.zip
+# simulate init.sh
+COPY common/defects4j-repos.zip /tmp/
+RUN unzip -q /tmp/defects4j-repos.zip -d /opt && \
+    rm /tmp/defects4j-repos.zip
+RUN mkdir -p /opt/defects4j/framework/lib/build_systems/gradle/dists
+COPY common/defects4j-gradle-dists.zip /tmp/
+COPY common/defects4j-gradle-deps.zip /tmp/
+RUN unzip -q /tmp/defects4j-gradle-dists.zip -d /opt/defects4j/framework/lib/build_systems/gradle/dists && \
+    unzip -q /tmp/defects4j-gradle-deps.zip -d /opt/defects4j/framework/lib/build_systems/gradle && \
+    rm /tmp/defects4j-gradle-dists.zip /tmp/defects4j-gradle-deps.zip
 
 
 # -----------------------------------------------------------------------------
