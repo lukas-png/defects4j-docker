@@ -38,14 +38,15 @@ BUILDS=(
   "2.0.1"
   "2.1.0"
 
-  #"3.0.0"
-  #"3.0.1"
+  "3.0.0"
+  "3.0.1"
 )
 
 # Base archives the Dockerfiles COPY from common/. Downloaded on demand when
-# missing (see common/.gitignore for the same URLs). Format: "file|url".
+# missing (see common/.gitignore for the same URLs).
 BASE_ZIPS=(
   "https://defects4j.org/downloads/defects4j-repos.zip"
+  "https://defects4j.org/downloads/defects4j-repos-v3.zip"
   "https://defects4j.org/downloads/defects4j-gradle-dists.zip"
   "https://defects4j.org/downloads/defects4j-gradle-deps.zip"
 
@@ -88,6 +89,7 @@ ctx_for_version() {
         0.*) echo "version-1.x.x" ;;
         1.*) echo "version-1.x.x" ;;
         2.*) echo "version-2.x.x" ;;
+        3.*) echo "version-3.x.x" ;;
         *)
             red "Unsupported Defects4J version: $ver"
             exit 1

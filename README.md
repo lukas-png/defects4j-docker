@@ -45,10 +45,6 @@ Images are published as: `ghcr.io/lukas-png/defects4j-docker:<Defects4J version>
 | `2.0.0`   | 2.0.0     |        **8** |    **17** | **835** |
 | `2.0.1`   | 2.0.1     |            8 |        17 |     835 |
 | `2.1.0`   | 2.1.0     |            8 |        17 |     835 |
-
-## Planned images
-| Image tag | Defects4J | Java version | #Projects | #Bugs   |
-|-----------|-----------|--------------|-----------|---------|
 | `3.0.0`   | 3.0.0     |       **11** |        17 | **854** |
 | `3.0.1`   | 3.0.1     |           11 |        17 |     854 |
 
@@ -69,10 +65,8 @@ Images are published as: `ghcr.io/lukas-png/defects4j-docker:<Defects4J version>
 Some archives under `common/` are downloaded automatically on first build (several hundred MB total, not tracked in Git).
 
 ## Notes
-
 - The timezone `TZ=America/Los_Angeles` is set inside containers for reproducible test results.
 
 ## License
-
 Defects4J is distributed under its own license; see the [upstream repository](https://github.com/rjust/defects4j).
 This repo only provides the container build and packaging layer.

@@ -1,0 +1,115 @@
+# =============================================================================
+# Defects4J 3.* (Java 11) — self-contained, ready-to-work image.
+#
+# Build with the repository root as build context (so common/ is reachable):
+#   docker build -f version-3.x.x/Dockerfile -t defects4j:3.0.0 --build-arg D4J_VERSION=3.0.0 .
+# =============================================================================
+FROM ubuntu:26.04
+LABEL org.opencontainers.image.source=https://github.com/lukas-png/defects4j-docker
+LABEL org.opencontainers.image.licenses=MIT
+
+# -----------------------------------------------------------------------------
+# System dependencies + Java 11
+# -----------------------------------------------------------------------------
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        perl cpanminus build-essential libcrypt-dev git subversion unzip \
+        openjdk-11-jdk ant ant-optional \
+    && rm -rf /var/lib/apt/lists/*
+ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+ENV PATH=${JAVA_HOME}/bin:${PATH}
+
+
+# -----------------------------------------------------------------------------
+# Perl dependencies
+# -----------------------------------------------------------------------------
+RUN cpanm --notest DBI DBD::CSV URI JSON JSON::Parse List::Util Perl::Critic String::Interpolate \
+    || { echo "--- CPANM BUILD LOG ---"; cat /root/.cpanm/work/*/build.log; exit 1; }
+
+
+# -----------------------------------------------------------------------------
+# Defects4J
+# -----------------------------------------------------------------------------
+ARG D4J_VERSION=3.0.0
+ADD https://github.com/rjust/defects4j/archive/refs/tags/v${D4J_VERSION}.tar.gz /tmp/
+RUN tar -xzf /tmp/v${D4J_VERSION}.tar.gz -C /opt && \
+    mv /opt/defects4j-${D4J_VERSION} /opt/defects4j && \
+    rm /tmp/v${D4J_VERSION}.tar.gz
+RUN printf '%s\n' "$D4J_VERSION" > /opt/defects4j/version
+
+###############################################################################
+# CONTAINER FIXES — patches to upstream Defects4J needed to run inside Docker.
+# These do NOT exist upstream; everything outside this block is stock setup.
+###############################################################################
+
+# FIX: Defects4J creates per-bug working copies with `git clone`, which uses
+#      hardlinks by default and fails across Docker's overlay layers.
+RUN sed -i 's|git clone $self->{repo}|git clone --no-hardlinks $self->{repo}|' \
+    /opt/defects4j/framework/core/Vcs/Git.pm
+
+# Don't check for Major or test generation tool existence; not needed for base
+# Defects4J functionality
+RUN sed -i \
+    '/-e "\$MAJOR_ROOT\/bin\/ant"/{N;d;}' \
+     /opt/defects4j/framework/core/Constants.pm
+RUN sed -i \
+    '/-d "\$TESTGEN_LIB_DIR"/{N;d;}' \
+     /opt/defects4j/framework/core/Constants.pm
+
+# Use installed Ant
+RUN sed -i \
+    's|\$MAJOR_ROOT/bin/ant|ant|g' \
+    /opt/defects4j/framework/core/Project.pm
+
+###############################################################################
+# END CONTAINER FIXES
+###############################################################################
+
+
+# -----------------------------------------------------------------------------
+# Defects4J initialization
+# -----------------------------------------------------------------------------
+# simulate init.sh
+COPY common/defects4j-repos-v3.zip /tmp/
+RUN unzip -q /tmp/defects4j-repos-v3.zip -d /opt && \
+    rm /tmp/defects4j-repos-v3.zip
+RUN mkdir -p /opt/defects4j/framework/lib/build_systems/gradle/dists
+COPY common/defects4j-gradle-dists.zip /tmp/
+COPY common/defects4j-gradle-deps.zip /tmp/
+RUN unzip -q /tmp/defects4j-gradle-dists.zip -d /opt/defects4j/framework/lib/build_systems/gradle/dists && \
+    unzip -q /tmp/defects4j-gradle-deps.zip -d /opt/defects4j/framework/lib/build_systems/gradle && \
+    rm /tmp/defects4j-gradle-dists.zip /tmp/defects4j-gradle-deps.zip
+
+
+# -----------------------------------------------------------------------------
+# Helper scripts
+# -----------------------------------------------------------------------------
+COPY version-2.x.x/d4j-list  /usr/local/bin/d4j-list
+COPY common/d4j-checkout     /usr/local/bin/d4j-checkout
+COPY common/d4j-checkout-all /usr/local/bin/d4j-checkout-all
+RUN chmod +x /usr/local/bin/d4j-checkout \
+             /usr/local/bin/d4j-list \
+             /usr/local/bin/d4j-checkout-all
+
+
+# -----------------------------------------------------------------------------
+# Environment
+# -----------------------------------------------------------------------------
+ENV D4J_HOME=/opt/defects4j
+ENV PATH=/opt/defects4j/framework/bin:${PATH}
+ENV TZ=America/Los_Angeles
+ENV _JAVA_OPTIONS=-Dfile.encoding=UTF-8
+
+
+# -----------------------------------------------------------------------------
+# Optionally bake the full checkout into the image at /work.
+# Pass --build-arg CHECKOUT_BUGS=true to enable (>1h build, multi-GB image).
+# -----------------------------------------------------------------------------
+ARG CHECKOUT_BUGS=false
+RUN if [ "$CHECKOUT_BUGS" = "true" ]; then \
+        d4j-checkout-all; \
+    fi
+
+
+WORKDIR /work
+CMD ["bash"]
