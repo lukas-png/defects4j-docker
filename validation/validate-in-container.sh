@@ -8,10 +8,10 @@ csv_escape() {
 }
 
 expected_tests() {
-  local project="$1"
-  local bug="$2"
+  local pid="$1"
+  local bid="$2"
 
-  awk -F';' -v p="$project" -v b="$bug" '
+  awk -F';' -v p="$pid" -v b="$bid" '
     NR == 1 { next }
     $1 == p && $2 == b {
       for (i = 3; i <= NF; i++) {
@@ -42,26 +42,28 @@ if [[ ! -f "$EXPECTED_CSV" ]]; then
   exit 2
 fi
 
+
 if [[ "$#" -eq 0 ]]; then
-  echo "Usage inside container: validate-in-container.sh Project-BugID [...]" >&2
-  exit 2
+  mapfile -t BUG_IDS < <(d4j-list)
+else
+  BUG_IDS=("$@")
 fi
 
 printf "Project;Bug;Status;ExpectedCount;ObservedCount;Missing;Unexpected\n"
 
-for bug_id in "$@"; do
-  project="${bug_id%-*}"
-  bug="${bug_id##*-}"
-  workdir="/work/$project/$bug"
-  log="/tmp/${project}-${bug}.test.log"
+for bug_id in "${BUG_IDS[@]}"; do
+  pid="${bug_id%-*}"
+  bid="${bug_id##*-}"
+  workdir="/work/$pid/$bid"
+  log="/tmp/$pid-$bid.test.log"
 
   printf '%s;%s;' \
-    "$project" \
-    "$bug"
+    "$pid" \
+    "$bid"
 
   rm -rf "$workdir"
 
-  if ! d4j-checkout "$project-$bug" >/tmp/checkout.log 2>&1; then
+  if ! d4j-checkout "$pid-$bid" >/tmp/checkout.log 2>&1; then
     printf "CHECKOUT_FAILED;0;0;;\n"
     continue
   fi
@@ -73,10 +75,10 @@ for bug_id in "$@"; do
 
   defects4j test >"$log" 2>&1
 
-  expected_file="/tmp/${project}-${bug}.expected"
-  observed_file="/tmp/${project}-${bug}.observed"
+  expected_file="/tmp/$pid-$bid.expected"
+  observed_file="/tmp/$pid-$bid.observed"
 
-  expected_tests "$project" "$bug" >"$expected_file"
+  expected_tests "$pid" "$bid" >"$expected_file"
   observed_tests "$workdir" "$log" >"$observed_file"
 
   missing="$(comm -23 "$expected_file" "$observed_file" | paste -sd ',' -)"

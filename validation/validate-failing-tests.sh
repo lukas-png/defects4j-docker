@@ -20,7 +20,7 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-[[ -n "$IMAGE" && ${#BUGS[@]} -gt 0 ]] || usage
+[[ -n "$IMAGE" ]] || usage
 
 ENGINE="${ENGINE:-}"
 if [[ -z "$ENGINE" ]]; then
