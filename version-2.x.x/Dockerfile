@@ -107,7 +107,7 @@ ENV _JAVA_OPTIONS=-Dfile.encoding=UTF-8
 # -----------------------------------------------------------------------------
 ARG CHECKOUT_BUGS=false
 RUN if [ "$CHECKOUT_BUGS" = "true" ]; then \
-        /usr/local/bin/checkout_all.sh; \
+        d4j-checkout-all; \
     fi
 
 

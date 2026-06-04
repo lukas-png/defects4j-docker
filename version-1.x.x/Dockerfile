@@ -157,11 +157,7 @@ ENV _JAVA_OPTIONS="-XX:MaxPermSize=1g -Xmx3g"
 # -----------------------------------------------------------------------------
 ARG CHECKOUT_BUGS=false
 RUN if [ "$CHECKOUT_BUGS" = "true" ]; then \
-        if [[ "$D4J_VERSION" == 1.* ]]; then \
-            /usr/local/bin/checkout_all.sh Chart Closure Math Mockito Lang Time; \
-        else \
-            /usr/local/bin/checkout_all.sh Chart Closure Math Lang Time; \
-        fi; \
+        d4j-checkout-all; \
     fi
 
 
