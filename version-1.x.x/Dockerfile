@@ -12,21 +12,29 @@ LABEL org.opencontainers.image.licenses=MIT
 # System dependencies
 # -----------------------------------------------------------------------------
 RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y \
-        git subversion perl cpanminus libcrypt-dev gcc g++ make \
-        build-essential unzip curl wget ca-certificates ant maven \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        perl cpanminus build-essential libcrypt-dev git subversion unzip \
+        fontconfig fonts-dejavu-core \
     && rm -rf /var/lib/apt/lists/*
 
+
 # -----------------------------------------------------------------------------
-# Java 7 (Zulu OpenJDK 7)
+# Java 7 (Zulu OpenJDK 7) & Ant 1.9
 # -----------------------------------------------------------------------------
 ENV ZULU7_TGZ=zulu7.56.0.11-ca-jdk7.0.352-linux_x64.tar.gz
+COPY common/${ZULU7_TGZ} /tmp/
 RUN mkdir -p /opt/jdks && \
-    curl -fsSL "https://cdn.azul.com/zulu/bin/${ZULU7_TGZ}" -o "/tmp/${ZULU7_TGZ}" && \
     tar -xzf "/tmp/${ZULU7_TGZ}" -C /opt/jdks && \
     rm -f "/tmp/${ZULU7_TGZ}" 
 ENV JAVA_HOME=/opt/jdks/zulu7.56.0.11-ca-jdk7.0.352-linux_x64
-ENV PATH=${JAVA_HOME}/bin:${PATH}
+
+ENV ANT_VERSION=1.9.16
+COPY common/apache-ant-${ANT_VERSION}-bin.tar.gz /tmp/
+RUN tar -xzf "/tmp/apache-ant-${ANT_VERSION}-bin.tar.gz" -C /opt && \
+    rm -f "/tmp/apache-ant-${ANT_VERSION}-bin.tar.gz"
+ENV ANT_HOME=/opt/apache-ant-${ANT_VERSION}
+
+ENV PATH=${ANT_HOME}/bin:${JAVA_HOME}/bin:${PATH}
 
 # -----------------------------------------------------------------------------
 # Perl dependencies
@@ -40,9 +48,10 @@ RUN cpanm --notest DBI DBD::CSV URI JSON JSON::XS List::MoreUtils version \
 # -----------------------------------------------------------------------------
 ARG D4J_VERSION=1.4.0
 WORKDIR /opt
-RUN curl -L https://github.com/rjust/defects4j/archive/refs/tags/v${D4J_VERSION}.tar.gz \
-    | tar -xz && \
-    mv defects4j-${D4J_VERSION} defects4j
+ADD https://github.com/rjust/defects4j/archive/refs/tags/v${D4J_VERSION}.tar.gz /tmp/
+RUN tar -xzf /tmp/v${D4J_VERSION}.tar.gz && \
+    mv defects4j-${D4J_VERSION} defects4j && \
+    rm /tmp/v${D4J_VERSION}.tar.gz
 WORKDIR /opt/defects4j
 
 ###############################################################################
@@ -62,6 +71,15 @@ RUN sed -i \
     's/git --work-tree=\$work_dir apply --directory=/git --work-tree=\$work_dir apply --unsafe-paths --directory=/' \
     /opt/defects4j/framework/core/Vcs/Git.pm
 
+# Don't check for Major or test generation tool existence; not needed for base
+# Defects4J functionality
+RUN sed -i \
+    '/-e "\$MAJOR_ROOT\/bin\/ant"/{N;d;}' \
+     /opt/defects4j/framework/core/Constants.pm
+RUN sed -i \
+    '/-d "\$TESTGEN_LIB_DIR"/{N;d;}' \
+     /opt/defects4j/framework/core/Constants.pm
+
 ###############################################################################
 # END CONTAINER FIXES
 ###############################################################################
@@ -69,21 +87,30 @@ RUN sed -i \
 # -----------------------------------------------------------------------------
 # Defects4J initialization
 # -----------------------------------------------------------------------------
-# Bake in the local Gradle archives so init.sh can use them instead
-# of downloading from defects4j.org (~100 MB for dists). The wildcards make the
-# zips optional: when an archive is absent only the .keep placeholder is copied
-# and init.sh falls back to the remote download for that archive.
-COPY common/defects4j-gradle-dists.zip \
-     common/defects4j-gradle-deps.zip \
-     /opt/gradle-dists/
-# Use custom init.sh TODO why?
-COPY version-1.x.x/init.sh      /opt/defects4j/init.sh
-# Use custom get_repos.sh which uses provided defects4j-repos.zip
-COPY common/get_repos.sh        /opt/defects4j/project_repos/get_repos.sh
-RUN chmod +x /opt/defects4j/init.sh \
-             /opt/defects4j/project_repos/get_repos.sh
-COPY common/defects4j-repos.zip /opt/defects4j-repos.zip
-RUN ./init.sh && rm /opt/defects4j-repos.zip
+# simulate init.sh
+COPY common/defects4j-repos.zip /tmp/
+RUN unzip -q /tmp/defects4j-repos.zip -d /opt && \
+    rm /tmp/defects4j-repos.zip && \
+    rm -rf \
+        commons-cli.git \
+        commons-collections.git \
+        commons-csv.git \
+        jackson-core.git \
+        jackson-dataformat-xml.git \
+        mockito.git \
+        commons-codec.git \
+        commons-compress.git \
+        commons-jxpath.git \
+        gson.git \
+        jackson-databind.git \
+        jsoup.git
+RUN mkdir -p /opt/defects4j/framework/lib/build_systems/gradle/dists
+COPY common/defects4j-gradle-dists.zip /tmp/
+COPY common/defects4j-gradle-deps.zip /tmp/
+RUN unzip -q /tmp/defects4j-gradle-dists.zip -d /opt/defects4j/framework/lib/build_systems/gradle/dists && \
+    unzip -q /tmp/defects4j-gradle-deps.zip -d /opt/defects4j/framework/lib/build_systems/gradle && \
+    rm /tmp/defects4j-gradle-dists.zip /tmp/defects4j-gradle-deps.zip
+
 
 ###############################################################################
 # CONTAINER FIXES — patches to upstream Defects4J needed to run inside Docker.
@@ -100,9 +127,9 @@ RUN sed -i '/<scriptdef name="hastarget"/,/<\/scriptdef>/d' \
         /opt/defects4j/framework/projects/Math/Math.build.xml
 
 # FIX: Major's Ant integration references ant-contrib, which is not bundled.
-RUN mkdir -p /opt/defects4j/major/lib/ant && \
-    curl -fsSL https://repo1.maven.org/maven2/ant-contrib/ant-contrib/1.0b3/ant-contrib-1.0b3.jar \
-        -o /opt/defects4j/major/lib/ant/ant-contrib-1.0b3.jar
+RUN mkdir -p /opt/defects4j/major/lib/ant
+COPY common/ant-contrib-1.0b3.jar /opt/defects4j/major/lib/ant/
+
 
 ###############################################################################
 # END CONTAINER FIXES (part 2)

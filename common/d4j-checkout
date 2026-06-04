@@ -7,7 +7,7 @@ PROJECT="${BUG%%-*}"
 BID="${BUG##*-}"
 TARGET=${WORK}/${PROJECT}/${BID}
 
-echo "[*] Java version: $(unset JAVA_TOOL_OPTIONS; java -version 2>&1 | head -n 1)"
+echo "[*] Java version: $(unset _JAVA_OPTIONS; java -version 2>&1 | head -n 1)"
 
 echo "[*] Checkout ${PROJECT}-${BID} into ${TARGET}"
 mkdir -p "$WORK/$PROJECT"
