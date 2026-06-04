@@ -9,7 +9,7 @@ echo "[*] Java version: $(unset _JAVA_OPTIONS; java -version 2>&1 | head -n 1)"
 
 echo "[*] Checkout $1 into $target"
 mkdir -p "/work/$pid"
-defects4j checkout -p "$pid" -v "$bidb" -w "$target"
+defects4j checkout -p "$pid" -v "$bid" -w "$target"
 echo "[*] Compile..."
 defects4j compile -w "$target"
 echo "[*] Done. Run tests with: defects4j test -w $target"
