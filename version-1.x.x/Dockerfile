@@ -48,12 +48,11 @@ RUN cpanm --notest DBI DBD::CSV URI JSON JSON::Parse List::Util \
 # Defects4J
 # -----------------------------------------------------------------------------
 ARG D4J_VERSION=1.4.0
-WORKDIR /opt
 ADD https://github.com/rjust/defects4j/archive/refs/tags/v${D4J_VERSION}.tar.gz /tmp/
-RUN tar -xzf /tmp/v${D4J_VERSION}.tar.gz && \
-    mv defects4j-${D4J_VERSION} defects4j && \
+RUN tar -xzf /tmp/v${D4J_VERSION}.tar.gz -C /opt && \
+    mv /opt/defects4j-${D4J_VERSION} /opt/defects4j && \
     rm /tmp/v${D4J_VERSION}.tar.gz
-WORKDIR /opt/defects4j
+RUN printf '%s\n' "$D4J_VERSION" > /opt/defects4j/version
 
 ###############################################################################
 # CONTAINER FIXES — patches to upstream Defects4J needed to run inside Docker.
@@ -135,10 +134,12 @@ RUN sed -i '/<scriptdef name="hastarget"/,/<\/scriptdef>/d' \
 # -----------------------------------------------------------------------------
 # Helper scripts
 # -----------------------------------------------------------------------------
-COPY common/d4j-checkout                /usr/local/bin/d4j-checkout
-COPY version-1.x.x/d4j-checkout-project /usr/local/bin/d4j-checkout-project
+COPY version-1.x.x/d4j-list  /usr/local/bin/d4j-list
+COPY common/d4j-checkout     /usr/local/bin/d4j-checkout
+COPY common/d4j-checkout-all /usr/local/bin/d4j-checkout-all
 RUN chmod +x /usr/local/bin/d4j-checkout \
-             /usr/local/bin/d4j-checkout-project
+             /usr/local/bin/d4j-list \
+             /usr/local/bin/d4j-checkout-all
 
 
 # -----------------------------------------------------------------------------

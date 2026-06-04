@@ -1,0 +1,59 @@
+#!/bin/bash
+set -euo pipefail
+
+D4J_VERSION=$(cat /opt/defects4j/version)
+
+declare -a pid_filters=()
+while getopts ":p:" opt; do
+    case "$opt" in
+        p)
+            pid_filters+=("$OPTARG")
+            ;;
+        *)
+            echo "Usage: $0 [-p project]..."
+            exit 1
+            ;;
+    esac
+done
+
+version_le() {
+    [ "$(printf '%s\n%s\n' "$1" "$2" | sort -V | head -n1)" = "$1" ]
+}
+if version_le "$D4J_VERSION" "1.0.1"; then
+    pids=(Chart Closure Lang Math Time)
+else
+    pids=(Chart Closure Lang Math Mockito Time)
+fi
+
+if ((${#pid_filters[@]} > 0)); then
+    filtered=()
+    for project in "${pids[@]}"; do
+        for wanted in "${pid_filters[@]}"; do
+            if [[ "$project" == "$wanted" ]]; then
+                filtered+=("$project")
+                break
+            fi
+        done
+    done
+    pids=("${filtered[@]}")
+fi
+
+declare -A BUG_COUNTS=(
+    [Chart]=26
+    [Closure]=133
+    [Lang]=65
+    [Math]=106
+    [Mockito]=38
+    [Time]=27
+)
+
+if [[ "$D4J_VERSION" == "1.5.0" ]]; then
+    BUG_COUNTS[Closure]=176
+fi
+
+for pid in "${pids[@]}"; do
+    count="${BUG_COUNTS[$pid]}"
+    for bid in $(seq 1 "$count"); do
+        printf "%s-%s\n" "$pid" "$bid"
+    done
+done

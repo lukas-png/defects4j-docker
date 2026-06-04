@@ -1,0 +1,6 @@
+#!/bin/bash
+set -euo pipefail
+
+for id in $(d4j-list "$@"); do
+    d4j-checkout "$id"
+done

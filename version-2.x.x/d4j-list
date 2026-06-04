@@ -1,0 +1,10 @@
+#!/bin/bash
+set -euo pipefail
+
+for pid in $(defects4j pids)
+do
+    for bid in $(defects4j bids -p "$pid")
+    do
+        printf "%s-%s\n" "$pid" "$bid"
+    done
+done

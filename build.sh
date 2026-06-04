@@ -118,7 +118,7 @@ fi
 built=()
 pushed=()
 for ver in "${BUILDS[@]}"; do
-    [[ -n "$FILTER" && ! "$ver" =~ ^$FILTER ]] && continue
+    [[ -n "$FILTER" && "$ver" != "$FILTER" ]] && continue
 
     ctx="$(ctx_for_version "$ver")"
     local_tag="defects4j:$ver"
@@ -144,7 +144,7 @@ for ver in "${BUILDS[@]}"; do
 done
 
 if [[ ${#built[@]} -eq 0 ]]; then
-    yellow "No version matched filter '^$FILTER'."
+    yellow "No version matched filter '$FILTER'."
     exit 1
 fi
 
