@@ -99,4 +99,7 @@ for bug_id in "${BUG_IDS[@]}"; do
     "$observed_count" \
     "$(csv_escape "$missing")" \
     "$(csv_escape "$unexpected")"
+
+  cd /work
+  rm -rf "$workdir"
 done
