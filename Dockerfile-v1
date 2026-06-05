@@ -55,20 +55,27 @@ RUN printf '%s\n' "$D4J_VERSION" > /opt/defects4j/version
 
 # FIX: Defects4J creates per-bug working copies with `git clone`, which uses
 #      hardlinks by default and fails across Docker's overlay layers.
-RUN sed -i 's|git clone $self->{repo}|git clone --no-hardlinks $self->{repo}|' \
-    /opt/defects4j/framework/core/Vcs/Git.pm
+RUN sed -i \
+        's|git clone $self->{repo}|git clone --no-hardlinks $self->{repo}|' \
+        /opt/defects4j/framework/core/Vcs/Git.pm
 
 # FIX: allow Defects4J's bug patches to touch paths outside the work tree
 #      (modern git refuses this without --unsafe-paths).
 RUN sed -i \
-    's/git --work-tree=\$work_dir apply --directory=/git --work-tree=\$work_dir apply --unsafe-paths --directory=/' \
-    /opt/defects4j/framework/core/Vcs/Git.pm
+        's/git --work-tree=\$work_dir apply --directory=/git --work-tree=\$work_dir apply --unsafe-paths --directory=/' \
+        /opt/defects4j/framework/core/Vcs/Git.pm
 
 # Don't check for test generation tool existence; not needed for base
 # Defects4J functionality
 RUN sed -i \
-    '/-d "\$TESTGEN_LIB_DIR"/{N;d;}' \
-     /opt/defects4j/framework/core/Constants.pm
+        '/-d "\$TESTGEN_LIB_DIR"/{N;d;}' \
+        /opt/defects4j/framework/core/Constants.pm
+
+# Chart project file is missing an entry for Chart-26
+RUN FILE=/opt/defects4j/framework/projects/Chart/dir-layout.csv && \
+    if [ -f "$FILE" ] && ! grep -Fxq '102,source,tree' "$FILE"; then \
+        echo '102,source,tree' >> "$FILE"; \
+    fi
 
 ###############################################################################
 # END CONTAINER FIXES
@@ -119,9 +126,11 @@ RUN unzip -q /tmp/defects4j-gradle-dists.zip -d /opt/defects4j/framework/lib/bui
 # FIX: Math's build.xml uses a <scriptdef language="javascript"> target that
 #      needs a JSR-223/BSF JS engine, which is absent on Zulu JDK 7 + Major's
 #      Ant. Remove that block so Math compiles.
-RUN sed -i '/<scriptdef name="hastarget"/,/<\/scriptdef>/d' \
+RUN sed -i \
+        '/<scriptdef name="hastarget"/,/<\/scriptdef>/d' \
         /opt/defects4j/framework/projects/Math/Math.build.xml && \
-    sed -i '/<hastarget /d' \
+    sed -i \
+        '/<hastarget /d' \
         /opt/defects4j/framework/projects/Math/Math.build.xml
 
 ###############################################################################
