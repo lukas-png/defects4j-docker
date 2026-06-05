@@ -68,6 +68,9 @@ RUN unzip -q /tmp/defects4j-repos-v3.zip -d /opt && \
 
 COPY common/major-3.0.1_jre11.zip /tmp/
 RUN unzip -q /tmp/major-3.0.1_jre11.zip -d /opt/defects4j && \
+    sed -i \
+        '/CodeCacheSize/a\    -Djava.awt.headless=true \\' \
+        /opt/defects4j/major/bin/ant && \
     rm /tmp/major-3.0.1_jre11.zip
 
 RUN mkdir -p /opt/defects4j/framework/lib/build_systems/gradle/dists
