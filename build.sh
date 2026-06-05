@@ -42,8 +42,8 @@ BUILDS=(
   "3.0.1"
 )
 
-# Base archives the Dockerfiles COPY from common/. Downloaded on demand when
-# missing (see common/.gitignore for the same URLs).
+# Base archives the Dockerfiles COPY from common/
+# Downloaded on demand when missing
 BASE_ZIPS=(
   "https://defects4j.org/downloads/defects4j-repos.zip"
   "https://defects4j.org/downloads/defects4j-repos-v3.zip"
@@ -51,9 +51,9 @@ BASE_ZIPS=(
   "https://defects4j.org/downloads/defects4j-gradle-dists-v3.zip"
   "https://defects4j.org/downloads/defects4j-gradle-deps.zip"
   "https://defects4j.org/downloads/defects4j-gradle-deps-v3.zip"
-
+  "https://mutation-testing.org/downloads/major-1.3.4_jre7.zip"
+  "https://mutation-testing.org/downloads/major-3.0.1_jre11.zip"
   "https://cdn.azul.com/zulu/bin/zulu7.56.0.11-ca-jdk7.0.352-linux_x64.tar.gz"
-  "https://archive.apache.org/dist/ant/binaries/apache-ant-1.9.16-bin.tar.gz"
 )
 
 # Fetch any common/*.zip that is absent so a clean checkout can build without

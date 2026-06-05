@@ -14,7 +14,7 @@ LABEL org.opencontainers.image.licenses=MIT
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         perl cpanminus build-essential libcrypt-dev git subversion unzip \
-        openjdk-8-jdk ant ant-optional \
+        openjdk-8-jdk \
     && rm -rf /var/lib/apt/lists/*
 ENV JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
 ENV PATH=${JAVA_HOME}/bin:${PATH}
@@ -47,19 +47,11 @@ RUN printf '%s\n' "$D4J_VERSION" > /opt/defects4j/version
 RUN sed -i 's|git clone $self->{repo}|git clone --no-hardlinks $self->{repo}|' \
     /opt/defects4j/framework/core/Vcs/Git.pm
 
-# Don't check for Major or test generation tool existence; not needed for base
+# Don't check for test generation tool existence; not needed for base
 # Defects4J functionality
-RUN sed -i \
-    '/-e "\$MAJOR_ROOT\/bin\/ant"/{N;d;}' \
-     /opt/defects4j/framework/core/Constants.pm
 RUN sed -i \
     '/-d "\$TESTGEN_LIB_DIR"/{N;d;}' \
      /opt/defects4j/framework/core/Constants.pm
-
-# Use installed Ant
-RUN sed -i \
-    's|\$MAJOR_ROOT/bin/ant|ant|g' \
-    /opt/defects4j/framework/core/Project.pm
 
 ###############################################################################
 # END CONTAINER FIXES
@@ -73,6 +65,12 @@ RUN sed -i \
 COPY common/defects4j-repos.zip /tmp/
 RUN unzip -q /tmp/defects4j-repos.zip -d /opt && \
     rm /tmp/defects4j-repos.zip
+
+COPY common/major-1.3.4_jre7.zip /tmp/
+RUN unzip -q /tmp/major-1.3.4_jre7.zip -d /opt/defects4j && \
+    cp /opt/defects4j/major/bin/.ant /opt/defects4j/major/bin/ant && \
+    rm /tmp/major-1.3.4_jre7.zip
+
 RUN mkdir -p /opt/defects4j/framework/lib/build_systems/gradle/dists
 COPY common/defects4j-gradle-dists.zip /tmp/
 COPY common/defects4j-gradle-deps.zip /tmp/

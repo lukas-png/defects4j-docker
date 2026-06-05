@@ -26,7 +26,7 @@ RUN cpanm --notest DBI DBD::CSV URI JSON JSON::Parse List::Util \
 
 
 # -----------------------------------------------------------------------------
-# Java 7 (Zulu OpenJDK 7) & Ant 1.9
+# Zulu OpenJDK 7
 # -----------------------------------------------------------------------------
 ENV ZULU7_TGZ=zulu7.56.0.11-ca-jdk7.0.352-linux_x64.tar.gz
 COPY common/${ZULU7_TGZ} /tmp/
@@ -34,14 +34,7 @@ RUN mkdir -p /opt/jdks && \
     tar -xzf "/tmp/${ZULU7_TGZ}" -C /opt/jdks && \
     rm -f "/tmp/${ZULU7_TGZ}" 
 ENV JAVA_HOME=/opt/jdks/zulu7.56.0.11-ca-jdk7.0.352-linux_x64
-
-ENV ANT_VERSION=1.9.16
-COPY common/apache-ant-${ANT_VERSION}-bin.tar.gz /tmp/
-RUN tar -xzf "/tmp/apache-ant-${ANT_VERSION}-bin.tar.gz" -C /opt && \
-    rm -f "/tmp/apache-ant-${ANT_VERSION}-bin.tar.gz"
-ENV ANT_HOME=/opt/apache-ant-${ANT_VERSION}
-
-ENV PATH=${ANT_HOME}/bin:${JAVA_HOME}/bin:${PATH}
+ENV PATH=${JAVA_HOME}/bin:${PATH}
 
 
 # -----------------------------------------------------------------------------
@@ -71,11 +64,8 @@ RUN sed -i \
     's/git --work-tree=\$work_dir apply --directory=/git --work-tree=\$work_dir apply --unsafe-paths --directory=/' \
     /opt/defects4j/framework/core/Vcs/Git.pm
 
-# Don't check for Major or test generation tool existence; not needed for base
+# Don't check for test generation tool existence; not needed for base
 # Defects4J functionality
-RUN sed -i \
-    '/-e "\$MAJOR_ROOT\/bin\/ant"/{N;d;}' \
-     /opt/defects4j/framework/core/Constants.pm
 RUN sed -i \
     '/-d "\$TESTGEN_LIB_DIR"/{N;d;}' \
      /opt/defects4j/framework/core/Constants.pm
@@ -105,6 +95,14 @@ RUN unzip -q /tmp/defects4j-repos.zip -d /opt && \
         gson.git \
         jackson-databind.git \
         jsoup.git
+
+COPY common/major-1.3.4_jre7.zip /tmp/
+RUN if ! echo "$D4J_VERSION" | grep -q '^0'; then \
+        unzip -q /tmp/major-1.3.4_jre7.zip -d /opt/defects4j && \
+        cp /opt/defects4j/major/bin/.ant /opt/defects4j/major/bin/ant; \
+    fi && \
+    rm /tmp/major-1.3.4_jre7.zip
+
 RUN mkdir -p /opt/defects4j/framework/lib/build_systems/gradle/dists
 COPY common/defects4j-gradle-dists.zip /tmp/
 COPY common/defects4j-gradle-deps.zip /tmp/
