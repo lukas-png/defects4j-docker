@@ -19,6 +19,13 @@ RUN apt-get update && \
 
 
 # -----------------------------------------------------------------------------
+# Perl dependencies
+# -----------------------------------------------------------------------------
+RUN cpanm --notest DBI DBD::CSV URI JSON JSON::Parse List::Util \
+    || { echo "--- CPANM BUILD LOG ---"; cat /root/.cpanm/work/*/build.log; exit 1; }
+
+
+# -----------------------------------------------------------------------------
 # Java 7 (Zulu OpenJDK 7) & Ant 1.9
 # -----------------------------------------------------------------------------
 ENV ZULU7_TGZ=zulu7.56.0.11-ca-jdk7.0.352-linux_x64.tar.gz
@@ -35,13 +42,6 @@ RUN tar -xzf "/tmp/apache-ant-${ANT_VERSION}-bin.tar.gz" -C /opt && \
 ENV ANT_HOME=/opt/apache-ant-${ANT_VERSION}
 
 ENV PATH=${ANT_HOME}/bin:${JAVA_HOME}/bin:${PATH}
-
-
-# -----------------------------------------------------------------------------
-# Perl dependencies
-# -----------------------------------------------------------------------------
-RUN cpanm --notest DBI DBD::CSV URI JSON JSON::Parse List::Util \
-    || { echo "--- CPANM BUILD LOG ---"; cat /root/.cpanm/work/*/build.log; exit 1; }
 
 
 # -----------------------------------------------------------------------------
