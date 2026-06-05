@@ -62,7 +62,7 @@ Images are published as: `ghcr.io/lukas-png/defects4j-docker:<Defects4J version>
 
 `build.sh` uses `podman` if available, otherwise `docker`. Set `ENGINE=docker` to override.
 
-Some archives under `common/` are downloaded automatically on first build (several hundred MB total, not tracked in Git).
+Some archives under `resources/` are downloaded automatically on first build (several hundred MB total, not tracked in Git).
 
 ## Differences to historical/original setup
 - The original `defects4j-repos.zip` used by Defects4J before 2.0.0 is no longer available.

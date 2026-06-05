@@ -42,7 +42,7 @@ BUILDS=(
   "3.0.1"
 )
 
-# Base archives the Dockerfiles COPY from common/
+# Base archives the Dockerfiles COPY from resources/
 # Downloaded on demand when missing
 BASE_ZIPS=(
   "https://defects4j.org/downloads/defects4j-repos.zip"
@@ -56,16 +56,16 @@ BASE_ZIPS=(
   "https://cdn.azul.com/zulu/bin/zulu7.56.0.11-ca-jdk7.0.352-linux_x64.tar.gz"
 )
 
-# Fetch any common/*.zip that is absent so a clean checkout can build without
+# Fetch any resources/*.zip that is absent so a clean checkout can build without
 # manual downloads. Existing (non-empty) archives are left untouched.
 ensure_base_zips() {
     local file url dest tmp
     for url in "${BASE_ZIPS[@]}"; do
         file="${url##*/}"
-        dest="$BASE_DIR/common/$file"
+        dest="$BASE_DIR/resources/$file"
 
         if [[ -s "$dest" ]]; then
-            green "common/$file present"
+            green "resources/$file present"
             continue
         fi
 
@@ -80,7 +80,7 @@ ensure_base_zips() {
             exit 1
         fi
         mv "$tmp" "$dest"
-        green "Downloaded common/$file"
+        green "Downloaded resources/$file"
     done
 }
 
@@ -88,10 +88,10 @@ ctx_for_version() {
     local ver="$1"
 
     case "$ver" in
-        0.*) echo "version-1.x.x" ;;
-        1.*) echo "version-1.x.x" ;;
-        2.*) echo "version-2.x.x" ;;
-        3.*) echo "version-3.x.x" ;;
+        0.*) echo "v1" ;;
+        1.*) echo "v1" ;;
+        2.*) echo "v2" ;;
+        3.*) echo "v3" ;;
         *)
             red "Unsupported Defects4J version: $ver"
             exit 1
@@ -127,11 +127,11 @@ for ver in "${BUILDS[@]}"; do
     ctx="$(ctx_for_version "$ver")"
     local_tag="defects4j:$ver"
 
-    cyan "\nBuilding $local_tag (Defects4J $ver) from $ctx with $ENGINE"
+    cyan "\nBuilding $local_tag (Defects4J $ver) from Dockerfile-$ctx with $ENGINE"
     "$ENGINE" build \
         --build-arg D4J_VERSION="$ver" \
         --build-arg CHECKOUT_BUGS="$( [[ "$CHECKOUT_ALL" -eq 1 ]] && echo true || echo false )" \
-        -f "$BASE_DIR/$ctx/Dockerfile" \
+        -f "$BASE_DIR/Dockerfile-$ctx" \
         -t "$local_tag" \
         "$BASE_DIR" || { red "Failed to build $local_tag"; exit 1; }
     green "Built $local_tag"
