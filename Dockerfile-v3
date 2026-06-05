@@ -2,7 +2,7 @@
 # Defects4J 3.* (Java 11) — self-contained, ready-to-work image.
 #
 # Build with the repository root as build context (so resources/ is reachable):
-#   docker build -f version-3.x.x/Dockerfile -t defects4j:3.0.0 --build-arg D4J_VERSION=3.0.0 .
+#   docker build -f Dockerfile-v3 -t defects4j:3.0.0 --build-arg D4J_VERSION=3.0.0 .
 # =============================================================================
 FROM ubuntu:26.04
 LABEL org.opencontainers.image.source=https://github.com/lukas-png/defects4j-docker
