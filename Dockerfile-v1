@@ -16,6 +16,7 @@ RUN apt-get update && \
         perl cpanminus build-essential libcrypt-dev git subversion unzip \
         fontconfig fonts-dejavu-core \
     && rm -rf /var/lib/apt/lists/*
+RUN git config --system --add safe.directory '*'
 
 
 # -----------------------------------------------------------------------------
@@ -164,9 +165,6 @@ ENV _JAVA_OPTIONS="-XX:MaxPermSize=1g -Xmx3g -Dfile.encoding=UTF-8"
 RUN useradd -m user && mkdir /work && chown user /work
 USER user
 WORKDIR /work
-RUN for dir in /opt/defects4j/project_repos/*.git; do \
-        git config --global --add safe.directory $dir; \
-    done
 CMD ["bash"]
 
 

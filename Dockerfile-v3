@@ -16,6 +16,7 @@ RUN apt-get update && \
         perl cpanminus build-essential libcrypt-dev git subversion unzip \
         openjdk-11-jdk \
     && rm -rf /var/lib/apt/lists/*
+RUN git config --system --add safe.directory '*'
 ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
 ENV PATH=${JAVA_HOME}/bin:${PATH}
 
@@ -114,9 +115,6 @@ ENV _JAVA_OPTIONS=-Dfile.encoding=UTF-8
 RUN useradd -m user && mkdir /work && chown user /work
 USER user
 WORKDIR /work
-RUN for dir in /opt/defects4j/project_repos/*.git; do \
-        git config --global --add safe.directory $dir; \
-    done
 CMD ["bash"]
 
 
