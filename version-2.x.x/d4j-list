@@ -1,8 +1,32 @@
 #!/bin/bash
 set -euo pipefail
 
+declare -a pid_filters=()
+while getopts ":p:" opt; do
+    case "$opt" in
+        p)
+            pid_filters+=("$OPTARG")
+            ;;
+        *)
+            echo "Usage: $0 [-p project]..."
+            exit 1
+            ;;
+    esac
+done
+
 for pid in $(defects4j pids)
 do
+    if ((${#pid_filters[@]} > 0)); then
+        found=false
+        for wanted in "${pid_filters[@]}"; do
+            if [[ "$pid" == "$wanted" ]]; then
+                found=true
+                break
+            fi
+        done
+        $found || continue
+    fi
+
     for bid in $(defects4j bids -p "$pid" 2>/dev/null)
     do
         printf "%s-%s\n" "$pid" "$bid"
