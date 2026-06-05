@@ -65,11 +65,14 @@ Images are published as: `ghcr.io/lukas-png/defects4j-docker:<Defects4J version>
 Some archives under `common/` are downloaded automatically on first build (several hundred MB total, not tracked in Git).
 
 ## Differences to historical/original setup
-- The original [defects4j-repos.zip](http://people.cs.umass.edu/~rjust/defects4j/download/defects4j-repos.zip) used by Defects4J before 2.0.0 is no longer available.
-  We use the one from Defects4J 2.0.0 ([defects4j-repos.zip](https://defects4j.org/downloads/defects4j-repos.zip)) for versions 0.* and 1.* as well.
-  As only additional bugs are added for Defects4J 2.0.0, the "old" bugs used by the versions 1.* and 0.* remained stable in this archive.
-- The included Major version, which bundles the Ant tool used by Defects4J, differs for versions 1.0.0 through 1.2.0.
-- The test generation tools EvoSuite and Randoop that are usually installed via `init.sh` are not included.
+- The original `defects4j-repos.zip` used by Defects4J before 2.0.0 is no longer available.
+  We use the one from Defects4J 2.0.0 for versions 0.* and 1.* as well.
+  As only additional bugs are added for Defects4J 2.0.0, the "old" bugs used by the versions 1.* and 0.* remained identical in this archive.
+- The same goes for the gradle dependencies that are hosted in the `defects4j-gradle-deps.zip` and  `defects4j-gradle-dists.zip` archives; we use the versions hosted for Defects4J 2.0.0.
+  Additionally, these were introduced in Defects4J 1.2.0, but we also include them in the image for all versions before that.
+- The included version of the Major tool, which bundles the Ant tool used by Defects4J, differs for versions 1.0.0 through 1.2.0.
+  For these, we use the same Major version as used in Defects4J 1.3.0 and later.
+- Additional tools (e.g. the test generation tools EvoSuite and Randoop) that are usually installed via `init.sh` are not included.
   They are not required for base functionality of Defects4J (`checkout`, `compile`, and `test`).
   This reduces the external dependencies to download for the image creation.
 
