@@ -150,6 +150,18 @@ ENV _JAVA_OPTIONS="-XX:MaxPermSize=1g -Xmx3g -Dfile.encoding=UTF-8"
 
 
 # -----------------------------------------------------------------------------
+# User setup
+# -----------------------------------------------------------------------------
+RUN useradd -m user && mkdir /work && chown user /work
+USER user
+WORKDIR /work
+RUN for dir in /opt/defects4j/project_repos/*.git; do \
+        git config --global --add safe.directory $dir; \
+    done
+CMD ["bash"]
+
+
+# -----------------------------------------------------------------------------
 # Optionally bake the full checkout into the image at /work.
 # Pass --build-arg CHECKOUT_BUGS=true to enable (>1h build, multi-GB image).
 # -----------------------------------------------------------------------------
@@ -157,7 +169,3 @@ ARG CHECKOUT_BUGS=false
 RUN if [ "$CHECKOUT_BUGS" = "true" ]; then \
         d4j-checkout-all; \
     fi
-
-
-WORKDIR /work
-CMD ["bash"]
