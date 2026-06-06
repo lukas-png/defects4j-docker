@@ -38,6 +38,30 @@ RUN tar -xzf /tmp/v${D4J_VERSION}.tar.gz -C /opt && \
     rm /tmp/v${D4J_VERSION}.tar.gz
 RUN printf '%s\n' "$D4J_VERSION" > /opt/defects4j/version
 
+
+# -----------------------------------------------------------------------------
+# Defects4J initialization
+# -----------------------------------------------------------------------------
+# simulate init.sh
+COPY resources/defects4j-repos-v3.zip /tmp/
+RUN unzip -q /tmp/defects4j-repos-v3.zip -d /opt && \
+    rm /tmp/defects4j-repos-v3.zip
+
+COPY resources/major-3.0.1_jre11.zip /tmp/
+RUN unzip -q /tmp/major-3.0.1_jre11.zip -d /opt/defects4j && \
+    sed -i \
+        '/CodeCacheSize/a\    -Djava.awt.headless=true \\' \
+        /opt/defects4j/major/bin/ant && \
+    rm /tmp/major-3.0.1_jre11.zip
+
+RUN mkdir -p /opt/defects4j/framework/lib/build_systems/gradle/dists
+COPY resources/defects4j-gradle-dists-v3.zip /tmp/
+COPY resources/defects4j-gradle-deps-v3.zip  /tmp/
+RUN unzip -q /tmp/defects4j-gradle-dists-v3.zip -d /opt/defects4j/framework/lib/build_systems/gradle/dists && \
+    unzip -q /tmp/defects4j-gradle-deps-v3.zip -d /opt/defects4j/framework/lib/build_systems/gradle && \
+    rm /tmp/defects4j-gradle-dists-v3.zip /tmp/defects4j-gradle-deps-v3.zip
+
+
 ###############################################################################
 # CONTAINER FIXES — patches to upstream Defects4J needed to run inside Docker.
 # These do NOT exist upstream; everything outside this block is stock setup.
@@ -64,29 +88,6 @@ RUN FILE=/opt/defects4j/framework/projects/Chart/dir-layout.csv && \
 ###############################################################################
 # END CONTAINER FIXES
 ###############################################################################
-
-
-# -----------------------------------------------------------------------------
-# Defects4J initialization
-# -----------------------------------------------------------------------------
-# simulate init.sh
-COPY resources/defects4j-repos-v3.zip /tmp/
-RUN unzip -q /tmp/defects4j-repos-v3.zip -d /opt && \
-    rm /tmp/defects4j-repos-v3.zip
-
-COPY resources/major-3.0.1_jre11.zip /tmp/
-RUN unzip -q /tmp/major-3.0.1_jre11.zip -d /opt/defects4j && \
-    sed -i \
-        '/CodeCacheSize/a\    -Djava.awt.headless=true \\' \
-        /opt/defects4j/major/bin/ant && \
-    rm /tmp/major-3.0.1_jre11.zip
-
-RUN mkdir -p /opt/defects4j/framework/lib/build_systems/gradle/dists
-COPY resources/defects4j-gradle-dists-v3.zip /tmp/
-COPY resources/defects4j-gradle-deps-v3.zip  /tmp/
-RUN unzip -q /tmp/defects4j-gradle-dists-v3.zip -d /opt/defects4j/framework/lib/build_systems/gradle/dists && \
-    unzip -q /tmp/defects4j-gradle-deps-v3.zip -d /opt/defects4j/framework/lib/build_systems/gradle && \
-    rm /tmp/defects4j-gradle-dists-v3.zip /tmp/defects4j-gradle-deps-v3.zip
 
 
 # -----------------------------------------------------------------------------

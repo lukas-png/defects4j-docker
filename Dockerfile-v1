@@ -48,6 +48,43 @@ RUN tar -xzf /tmp/v${D4J_VERSION}.tar.gz -C /opt && \
     rm /tmp/v${D4J_VERSION}.tar.gz
 RUN printf '%s\n' "$D4J_VERSION" > /opt/defects4j/version
 
+
+# -----------------------------------------------------------------------------
+# Defects4J initialization
+# -----------------------------------------------------------------------------
+# simulate init.sh
+COPY resources/defects4j-repos.zip /tmp/
+RUN unzip -q /tmp/defects4j-repos.zip -d /opt && \
+    rm /tmp/defects4j-repos.zip && \
+    rm -rf \
+        commons-cli.git \
+        commons-collections.git \
+        commons-csv.git \
+        jackson-core.git \
+        jackson-dataformat-xml.git \
+        mockito.git \
+        commons-codec.git \
+        commons-compress.git \
+        commons-jxpath.git \
+        gson.git \
+        jackson-databind.git \
+        jsoup.git
+
+COPY resources/major-1.3.4_jre7.zip /tmp/
+RUN if ! echo "$D4J_VERSION" | grep -q '^0'; then \
+        unzip -q /tmp/major-1.3.4_jre7.zip -d /opt/defects4j && \
+        cp /opt/defects4j/major/bin/.ant /opt/defects4j/major/bin/ant; \
+    fi && \
+    rm /tmp/major-1.3.4_jre7.zip
+
+RUN mkdir -p /opt/defects4j/framework/lib/build_systems/gradle/dists
+COPY resources/defects4j-gradle-dists.zip /tmp/
+COPY resources/defects4j-gradle-deps.zip  /tmp/
+RUN unzip -q /tmp/defects4j-gradle-dists.zip -d /opt/defects4j/framework/lib/build_systems/gradle/dists && \
+    unzip -q /tmp/defects4j-gradle-deps.zip -d /opt/defects4j/framework/lib/build_systems/gradle && \
+    rm /tmp/defects4j-gradle-dists.zip /tmp/defects4j-gradle-deps.zip
+
+
 ###############################################################################
 # CONTAINER FIXES — patches to upstream Defects4J needed to run inside Docker.
 # These do NOT exist upstream; everything outside this block is stock setup.
@@ -105,42 +142,6 @@ RUN if [ "$D4J_VERSION" = "0.1.0" ]; then \
 ###############################################################################
 # END CONTAINER FIXES
 ###############################################################################
-
-
-# -----------------------------------------------------------------------------
-# Defects4J initialization
-# -----------------------------------------------------------------------------
-# simulate init.sh
-COPY resources/defects4j-repos.zip /tmp/
-RUN unzip -q /tmp/defects4j-repos.zip -d /opt && \
-    rm /tmp/defects4j-repos.zip && \
-    rm -rf \
-        commons-cli.git \
-        commons-collections.git \
-        commons-csv.git \
-        jackson-core.git \
-        jackson-dataformat-xml.git \
-        mockito.git \
-        commons-codec.git \
-        commons-compress.git \
-        commons-jxpath.git \
-        gson.git \
-        jackson-databind.git \
-        jsoup.git
-
-COPY resources/major-1.3.4_jre7.zip /tmp/
-RUN if ! echo "$D4J_VERSION" | grep -q '^0'; then \
-        unzip -q /tmp/major-1.3.4_jre7.zip -d /opt/defects4j && \
-        cp /opt/defects4j/major/bin/.ant /opt/defects4j/major/bin/ant; \
-    fi && \
-    rm /tmp/major-1.3.4_jre7.zip
-
-RUN mkdir -p /opt/defects4j/framework/lib/build_systems/gradle/dists
-COPY resources/defects4j-gradle-dists.zip /tmp/
-COPY resources/defects4j-gradle-deps.zip  /tmp/
-RUN unzip -q /tmp/defects4j-gradle-dists.zip -d /opt/defects4j/framework/lib/build_systems/gradle/dists && \
-    unzip -q /tmp/defects4j-gradle-deps.zip -d /opt/defects4j/framework/lib/build_systems/gradle && \
-    rm /tmp/defects4j-gradle-dists.zip /tmp/defects4j-gradle-deps.zip
 
 
 # -----------------------------------------------------------------------------
