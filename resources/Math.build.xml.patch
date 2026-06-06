@@ -1,5 +1,5 @@
---- Math.build.xml.before	2026-06-06 10:01:24.767188139 +0200
-+++ Math.build.xml.after	2026-06-06 10:06:14.049809981 +0200
+--- Math.build.xml.before	2026-06-06 20:58:39.820409188 +0200
++++ Math.build.xml.after	2026-06-06 21:01:39.344394064 +0200
 @@ -27,7 +27,7 @@
  #############################################################################-->
  <project name="D4J-Math">
@@ -9,7 +9,7 @@
  
      <!-- build.home is not set in old repository layout -->
      <property name="build.home" value="${classesdir}/.." />
-@@ -39,44 +39,50 @@
+@@ -39,25 +39,13 @@
      <property name="d4j.test.dir" value="${test.home}"/>
  
      <!-- Fixing ant script in case compile-tests is defined instead of compile.tests -->
@@ -33,48 +33,21 @@
 +    <typedef name="hastarget"
 +         classname="d4j.ant.HasTarget"
 +         classpath="/opt/defects4j/framework/projects/Math/ant-hastarget.jar"/>
-+
 +    <condition property="oldLayout">
 +        <hastarget name="compile-tests"/>
 +    </condition>
-+
-+    <if>
-+        <isset property="oldLayout"/>
-+        <then>
-+            <property name="test.home" value="${d4j.workdir}/src/test" />
-+            <property name="build.home" value="${defaulttargetdir}" />
-+            <property name="noget" value="true" />
  
 -    <hastarget targetname="compile-tests" newtargetname="compile.tests" setproperty="oldLayout" />
--    <path id="build.classpath">
--    <pathelement location="${d4j.home}/framework/projects/Math/lib/commons-discovery-0.5.jar" />
--    </path>
--    <if> <isset property="oldLayout" /> <then>
--        <property name ="test.home" value="${d4j.workdir}/src/test" />
--        <property name ="build.home" value="${defaulttargetdir}" />
--        <property name="noget" value="true" />
--        <path id="test.classpath">
--            <pathelement path="${testclassesdir}" />
-+            <path id="test.classpath">
-+                <pathelement path="${testclassesdir}" />
-                 <pathelement path="${classesdir}" />
-                 <pathelement path="${junit.jar}" />
--        </path>
--        <path id="compile.classpath">
--            <pathelement path="${classesdir}" />
--        </path>
-+            </path>
+     <path id="build.classpath">
+     <pathelement location="${d4j.home}/framework/projects/Math/lib/commons-discovery-0.5.jar" />
+     </path>
+@@ -75,6 +63,17 @@
+         </path>
  
--    </then> </if>
-+            <path id="compile.classpath">
-+                <pathelement path="${classesdir}" />
-+            </path>
-+        </then>
-+    </if>
+     </then> </if>
 +
 +    <target name="compile.tests">
-+        <if>
-+            <isset property="oldLayout"/>
++        <if> <isset property="oldLayout"/>
 +            <then>
 +                <antcall target="compile-tests"/>
 +            </then>
@@ -85,10 +58,4 @@
 +    </target>
      <!-- end of fixing ant script -->
  
-+    <path id="build.classpath">
-+    <pathelement location="${d4j.home}/framework/projects/Math/lib/commons-discovery-0.5.jar" />
-+    </path>
-+
      <!-- List of all developer-written tests that reliably pass on the fixed version -->
-     <fileset id="all.manual.tests" dir="${test.home}" excludes="${d4j.tests.exclude}">
-         <include name="**/*Test.java"/>
