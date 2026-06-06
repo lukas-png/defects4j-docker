@@ -33,7 +33,7 @@ ENV ZULU7_TGZ=zulu7.56.0.11-ca-jdk7.0.352-linux_x64.tar.gz
 COPY resources/${ZULU7_TGZ} /tmp/
 RUN mkdir -p /opt/jdks && \
     tar -xzf "/tmp/${ZULU7_TGZ}" -C /opt/jdks && \
-    rm -f "/tmp/${ZULU7_TGZ}" 
+    rm -f "/tmp/${ZULU7_TGZ}"
 ENV JAVA_HOME=/opt/jdks/zulu7.56.0.11-ca-jdk7.0.352-linux_x64
 ENV PATH=${JAVA_HOME}/bin:${PATH}
 
@@ -51,7 +51,6 @@ RUN printf '%s\n' "$D4J_VERSION" > /opt/defects4j/version
 ###############################################################################
 # CONTAINER FIXES — patches to upstream Defects4J needed to run inside Docker.
 # These do NOT exist upstream; everything outside this block is stock setup.
-# (first block BEFORE init.sh is run)
 ###############################################################################
 
 # FIX: Defects4J creates per-bug working copies with `git clone`, which uses
@@ -66,17 +65,42 @@ RUN sed -i \
         's/git --work-tree=\$work_dir apply --directory=/git --work-tree=\$work_dir apply --unsafe-paths --directory=/' \
         /opt/defects4j/framework/core/Vcs/Git.pm
 
-# Don't check for test generation tool existence; not needed for base
+# FIX: Don't check for test generation tool existence; not needed for base
 # Defects4J functionality
 RUN sed -i \
         '/-d "\$TESTGEN_LIB_DIR"/{N;d;}' \
         /opt/defects4j/framework/core/Constants.pm
 
-# Chart project file is missing an entry for Chart-26
+# FIX: Chart project file is missing an entry for Chart-26
 RUN FILE=/opt/defects4j/framework/projects/Chart/dir-layout.csv && \
     if [ -f "$FILE" ] && ! grep -Fxq '102,source,tree' "$FILE"; then \
         echo '102,source,tree' >> "$FILE"; \
     fi
+
+# FIX: Math's build.xml uses a <scriptdef language="javascript"> target that
+#      needs a JSR-223/BSF JS engine, which is absent on Zulu JDK 7 + Major's
+#      Ant. Replace with alternative implementation.
+COPY resources/HasTarget.java /tmp/HasTarget.java
+RUN mkdir -p /tmp/hastarget-classes && \
+    javac \
+        -cp /opt/defects4j/major/lib/ant.jar \
+        -d /tmp/hastarget-classes \
+        /tmp/HasTarget.java && \
+    jar cf /tmp/ant-hastarget.jar \
+        -C /tmp/hastarget-classes . && \
+    mv /tmp/ant-hastarget.jar \
+        /opt/defects4j/framework/projects/Math/ant-hastarget.jar && \
+    rm -r /tmp/HasTarget.java /tmp/hastarget-classes
+COPY resources/Math.build.xml.patch /tmp/
+COPY resources/Math.build.xml_0.1.0.patch /tmp/
+RUN if [ "$D4J_VERSION" = "0.1.0" ]; then \
+        patch_file="/tmp/Math.build.xml_0.1.0.patch"; \
+    else \
+        patch_file="/tmp/Math.build.xml.patch"; \
+    fi;\
+    patch /opt/defects4j/framework/projects/Math/Math.build.xml \
+        < "$patch_file" && \
+    rm /tmp/Math.build.xml.patch /tmp/Math.build.xml_0.1.0.patch
 
 ###############################################################################
 # END CONTAINER FIXES
@@ -117,26 +141,6 @@ COPY resources/defects4j-gradle-deps.zip  /tmp/
 RUN unzip -q /tmp/defects4j-gradle-dists.zip -d /opt/defects4j/framework/lib/build_systems/gradle/dists && \
     unzip -q /tmp/defects4j-gradle-deps.zip -d /opt/defects4j/framework/lib/build_systems/gradle && \
     rm /tmp/defects4j-gradle-dists.zip /tmp/defects4j-gradle-deps.zip
-
-###############################################################################
-# CONTAINER FIXES — patches to upstream Defects4J needed to run inside Docker.
-# These do NOT exist upstream; everything outside this block is stock setup.
-# (second block AFTER init.sh has run)
-###############################################################################
-
-# FIX: Math's build.xml uses a <scriptdef language="javascript"> target that
-#      needs a JSR-223/BSF JS engine, which is absent on Zulu JDK 7 + Major's
-#      Ant. Remove that block so Math compiles.
-RUN sed -i \
-        '/<scriptdef name="hastarget"/,/<\/scriptdef>/d' \
-        /opt/defects4j/framework/projects/Math/Math.build.xml && \
-    sed -i \
-        '/<hastarget /d' \
-        /opt/defects4j/framework/projects/Math/Math.build.xml
-
-###############################################################################
-# END CONTAINER FIXES (part 2)
-###############################################################################
 
 
 # -----------------------------------------------------------------------------

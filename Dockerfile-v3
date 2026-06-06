@@ -49,13 +49,13 @@ RUN sed -i \
         's|git clone $self->{repo}|git clone --no-hardlinks $self->{repo}|' \
         /opt/defects4j/framework/core/Vcs/Git.pm
 
-# Don't check for test generation tool existence; not needed for base
+# FIX: Don't check for test generation tool existence; not needed for base
 # Defects4J functionality
 RUN sed -i \
         '/-d "\$TESTGEN_LIB_DIR"/{N;d;}' \
         /opt/defects4j/framework/core/Constants.pm
 
-# Chart project file is missing an entry for Chart-26
+# FIX: Chart project file is missing an entry for Chart-26
 RUN FILE=/opt/defects4j/framework/projects/Chart/dir-layout.csv && \
     if [ -f "$FILE" ] && ! grep -Fxq '102,source,tree' "$FILE"; then \
         echo '102,source,tree' >> "$FILE"; \
