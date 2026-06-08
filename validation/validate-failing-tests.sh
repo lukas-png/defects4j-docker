@@ -36,11 +36,9 @@ abs_path() {
   printf '%s/%s\n' "$(pwd)" "$(basename "$1")"
 }
 
-CSV_ABS="$(abs_path expected-failing-tests.csv)"
 SCRIPT_ABS="$(abs_path validate-in-container.sh)"
 
 "$ENGINE" run --rm \
-  -v "$CSV_ABS:/expected-failing-tests.csv:ro" \
   -v "$SCRIPT_ABS:/usr/local/bin/validate-in-container.sh:ro" \
   "$IMAGE" \
   bash /usr/local/bin/validate-in-container.sh "${BUGS[@]}"

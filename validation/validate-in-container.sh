@@ -1,25 +1,18 @@
 #!/usr/bin/env bash
 set -u
 
-EXPECTED_CSV="/expected-failing-tests.csv"
-
 csv_escape() {
   printf '%s' "$1" | sed 's/"/""/g; s/^/"/; s/$/"/'
 }
 
+# Expected triggering tests come from the image's own, version-specific
+# trigger_tests file. 
 expected_tests() {
   local pid="$1"
   local bid="$2"
+  local f="${D4J_HOME:-/opt/defects4j}/framework/projects/$pid/trigger_tests/$bid"
 
-  awk -F';' -v p="$pid" -v b="$bid" '
-    NR == 1 { next }
-    $1 == p && $2 == b {
-      for (i = 3; i <= NF; i++) {
-        gsub(/^[ \t]+|[ \t]+$/, "", $i)
-        if ($i != "") print $i
-      }
-    }
-  ' "$EXPECTED_CSV" | sort -u
+  [[ -f "$f" ]] && sed -n 's/^--- //p' "$f" | sort -u
 }
 
 observed_tests() {
@@ -36,12 +29,6 @@ observed_tests() {
       | sort -u
   fi
 }
-
-if [[ ! -f "$EXPECTED_CSV" ]]; then
-  echo "Expected CSV not found: $EXPECTED_CSV" >&2
-  exit 2
-fi
-
 
 if [[ "$#" -eq 0 ]]; then
   mapfile -t BUG_IDS < <(d4j-list)
