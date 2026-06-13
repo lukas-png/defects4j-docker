@@ -57,18 +57,20 @@ COPY resources/defects4j-repos.zip /tmp/
 RUN unzip -q /tmp/defects4j-repos.zip -d /opt && \
     rm /tmp/defects4j-repos.zip && \
     rm -rf \
-        commons-cli.git \
-        commons-collections.git \
-        commons-csv.git \
-        jackson-core.git \
-        jackson-dataformat-xml.git \
-        mockito.git \
-        commons-codec.git \
-        commons-compress.git \
-        commons-jxpath.git \
-        gson.git \
-        jackson-databind.git \
-        jsoup.git
+        /opt/defects4j/project_repos/commons-cli.git \
+        /opt/defects4j/project_repos/commons-collections.git \
+        /opt/defects4j/project_repos/commons-csv.git \
+        /opt/defects4j/project_repos/jackson-core.git \
+        /opt/defects4j/project_repos/jackson-dataformat-xml.git \
+        /opt/defects4j/project_repos/commons-codec.git \
+        /opt/defects4j/project_repos/commons-compress.git \
+        /opt/defects4j/project_repos/commons-jxpath.git \
+        /opt/defects4j/project_repos/gson.git \
+        /opt/defects4j/project_repos/jackson-databind.git \
+        /opt/defects4j/project_repos/jsoup.git && \
+    case "$D4J_VERSION" in \
+        0.1.0|0.2.0|1.0.0|1.0.1) rm -rf /opt/defects4j/project_repos/mockito.git ;; \
+    esac
 
 COPY resources/major-1.3.4_jre7.zip /tmp/
 RUN if ! echo "$D4J_VERSION" | grep -q '^0'; then \
