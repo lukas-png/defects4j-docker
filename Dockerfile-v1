@@ -141,6 +141,21 @@ RUN if [ "$D4J_VERSION" = "0.1.0" ]; then \
         < "$patch_file" && \
     rm /tmp/Math.build.xml.patch /tmp/Math.build.xml_0.1.0.patch
 
+# FIX: In Defects4J versions 1.1.0 and 1.2.0, local gradle dependencies were
+#      not used when building in the Mockito project
+RUN if [ "$D4J_VERSION" = "1.2.0" ]; then \
+        sed -i \
+            -e 's|"$LIB_DIR/build_systems/gradle"|"$LIB_DIR/build_systems/gradle/dists"|' \
+            -e '99a\
+                system("find $work_dir -type f -name \\"build.gradle\\" -exec sed -i.bak '\''s|jcenter()|maven { url \\"$LIB_DIR/build_systems/gradle/deps\\" }\\\\n jcenter()\\\\n|g'\'' {} \\\\;");' \
+            /opt/defects4j/framework/core/Project/Mockito.pm; \
+    elif [ "$D4J_VERSION" = "1.1.0" ]; then \
+        sed -i \
+            -e '72a\
+                system("find $work_dir -type f -name \\"build.gradle\\" -exec sed -i.bak '\''s|jcenter()|maven { url \\"/opt/defects4j/framework/lib/build_systems/gradle/deps\\" }\\\\n jcenter()\\\\n|g'\'' {} \\\\;");' \
+            /opt/defects4j/framework/core/Project/Mockito.pm; \
+    fi
+
 ###############################################################################
 # END CONTAINER FIXES
 ###############################################################################
