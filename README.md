@@ -5,10 +5,18 @@ Container images for running [Defects4J](https://github.com/rjust/defects4j) in 
 Quick start:
 ```bash
 docker run --rm -it ghcr.io/lukas-png/defects4j-docker:2.0.0
-# Inside the container: check out and compile a bug in /work
+```
+
+Inside the container: check out, compile, and run tests for a bug in `/work`
+```bash
 d4j-checkout Lang-1
 cd /work/Lang/1
 defects4j test
+```
+
+To persistently keep the checked out bugs in a local directory, mount that as a volume to the `/work` directory inside the container (using the local directory `defects4j-bugs` as an example here):
+```bash
+docker run --rm -it -v ./defects4j-bugs:/work ghcr.io/lukas-png/defects4j-docker:2.0.0
 ```
 
 ### Helper scripts
