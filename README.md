@@ -76,6 +76,51 @@ Some archives under `resources/` are downloaded automatically on first build (se
   They are not required for base functionality of Defects4J (`checkout`, `compile`, and `test`).
   This reduces the external dependencies to download for the image creation.
 
+## Reproducibility issues
+We validate the reproducibility of the bugs in Defects4J with the script `validation/validate-failing-tests.sh`.
+For each bug, it validates that the actually failing tests match what Defects4J expects, by checking out the buggy version, running `defects4j test` on it, and comparing the output with the list of expected failing tests.
+We use this script to check that the environment in the container images is suitable for reproducing the bugs.
+
+While validating the reproducibility, we encountered a few discrepancies in the test results: some tests fail although they shouldn't.
+Here is an overview of the unexpectedly failing tests we encountered, which Defects4J version / container image we encountered them in, as well as whether they are consistently failing or not:
+
+| Version | Bug ID     | Unexpectedly failing test                                                                      | Consistent? |
+|---------|------------|------------------------------------------------------------------------------------------------|-------------|
+| `0.1.0` |     Math 1 | `org.apache.commons.math3.optimization.direct.CMAESOptimizerTest::testCigarWithBoundaries`     |  no (flaky) |
+| `0.1.0` |    Math 10 | `org.apache.commons.math3.optim.nonlinear.scalar.noderiv.CMAESOptimizerTest::testMaximize`     |  no (flaky) |
+| `0.1.0` |    Math 48 | `org.apache.commons.math.optimization.direct.CMAESOptimizerTest::testDiagonalRosen`            |  no (flaky) |
+| `1.0.1` |     Math 4 | `org.apache.commons.math3.optim.nonlinear.scalar.noderiv.CMAESOptimizerTest::testMaximize`     |  no (flaky) |
+| `1.0.1` |    Math 74 | `org.apache.commons.math.stat.descriptive.moment.MeanTest::testWeightedConsistency`            |  no (flaky) |
+| `1.1.0` | Mockito 26 | `org.mockitousage.verification.VerificationWithTimeoutTest::shouldFailVerificationWithTimeout` |         yes |
+| `1.2.0` | Mockito 26 | `org.mockitousage.verification.VerificationWithTimeoutTest::shouldFailVerificationWithTimeout` |         yes |
+| `1.4.0` |     Math 9 | `org.apache.commons.math3.optim.nonlinear.scalar.noderiv.CMAESOptimizerTest::testCigTab`       |  no (flaky) |
+| `1.4.0` |    Math 45 | `org.apache.commons.math.stat.descriptive.moment.MeanTest::testWeightedConsistency`            |  no (flaky) |
+| `2.0.0` |    Math 16 | `org.apache.commons.math3.genetics.FixedElapsedTimeTest::testIsSatisfied`                      |  no (flaky) |
+| `2.0.0` |    Math 41 | `org.apache.commons.math.analysis.function.LogitTest::testDerivativeWithInverseFunction`       |  no (flaky) |
+| `2.0.1` |    Math 16 | `org.apache.commons.math3.genetics.FixedElapsedTimeTest::testIsSatisfied`                      |  no (flaky) |
+| `2.0.1` |    Math 54 | `org.apache.commons.math.optimization.direct.CMAESOptimizerTest::testAckley`                   |  no (flaky) |
+| `2.1.0` |    Math 16 | `org.apache.commons.math3.genetics.FixedElapsedTimeTest::testIsSatisfied`                      |  no (flaky) |
+
+Two of them consistently appear, both from the Mockito project.
+All of the others are from the Math project and are flaky, i.e. they sometimes fail and sometimes not.
+A brief investigation suggests that the underlying tests might be timing-sensitive and we observed that they seem to fail more likely if system load is high.
+Because of this, we believe that there is no problem in the testing environment for the flaky tests (i.e. the environment in the container is not faulty).
+
+We also encountered another type of discrepancy in the test results: tests that do not fail although they should.
+Here is an overview of them:
+
+| Version | Bug ID  | Missing failing test                                                                  | Consistent? |
+|---------|---------|---------------------------------------------------------------------------------------|-------------|
+| `1.0.0` | Math 14 | `org.apache.commons.math3.fitting.PolynomialFitterTest::testLargeSample`              |  no (flaky) |
+| `1.1.0` | Math 13 | `org.apache.commons.math3.optimization.fitting.PolynomialFitterTest::testLargeSample` |  no (flaky) |
+| `1.3.1` | Math 14 | `org.apache.commons.math3.fitting.PolynomialFitterTest::testLargeSample`              |  no (flaky) |
+| `1.4.0` | Math 13 | `org.apache.commons.math3.optimization.fitting.PolynomialFitterTest::testLargeSample` |  no (flaky) |
+
+Overall, we can see that there is only one bug (Mockito 26) in the versions `1.1.0` and `1.2.0` which consistently cannot be reproduced.
+All the other discrepancies here are only flaky.
+They can be largely mitigated by keeping overall system load low (i.e. not running experiments in parallel on the same machine).
+Note, however, that we did not systematically search for flaky tests here; we only encountered them by chance, so there might be more flaky tests in hiding.
+
 ## License
 Defects4J is distributed under its own license; see the [upstream repository](https://github.com/rjust/defects4j).
 This repo only provides the container build and packaging layer.
