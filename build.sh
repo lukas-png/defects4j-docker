@@ -5,13 +5,11 @@ BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REGISTRY="${REGISTRY:-ghcr.io/lukas-png/defects4j-docker}"
 
 PUSH=0
-CHECKOUT_ALL=0
-FILTER=""
+VERSION=""
 for arg in "$@"; do
     case "$arg" in
-        --push)         PUSH=1 ;;
-        --checkout-all) CHECKOUT_ALL=1 ;;
-        *)              FILTER="$arg" ;;
+        --push) PUSH=1 ;;
+        *)      VERSION="$arg" ;;
     esac
 done
 
@@ -122,7 +120,7 @@ fi
 built=()
 pushed=()
 for ver in "${BUILDS[@]}"; do
-    [[ -n "$FILTER" && "$ver" != "$FILTER" ]] && continue
+    [[ -n "$VERSION" && "$ver" != "$VERSION" ]] && continue
 
     ctx="$(ctx_for_version "$ver")"
     local_tag="defects4j:$ver"
@@ -130,7 +128,6 @@ for ver in "${BUILDS[@]}"; do
     cyan "\nBuilding $local_tag (Defects4J $ver) from Dockerfile-$ctx with $ENGINE"
     "$ENGINE" build \
         --build-arg D4J_VERSION="$ver" \
-        --build-arg CHECKOUT_BUGS="$( [[ "$CHECKOUT_ALL" -eq 1 ]] && echo true || echo false )" \
         -f "$BASE_DIR/Dockerfile-$ctx" \
         -t "$local_tag" \
         "$BASE_DIR" || { red "Failed to build $local_tag"; exit 1; }
@@ -148,7 +145,7 @@ for ver in "${BUILDS[@]}"; do
 done
 
 if [[ ${#built[@]} -eq 0 ]]; then
-    yellow "No version matched filter '$FILTER'."
+    yellow "No version matched '$VERSION'."
     exit 1
 fi
 

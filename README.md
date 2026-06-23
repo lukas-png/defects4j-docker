@@ -63,9 +63,6 @@ Images are published as: `ghcr.io/lukas-png/defects4j-docker:<Defects4J version>
 
 # build a single version
 ./build.sh 2.0.0
-
-# embed all bugs at build time (slow: >1 h per version, multi-GB images)
-./build.sh --checkout-all
 ```
 
 `build.sh` uses `podman` if available, otherwise `docker`. Set `ENGINE=docker` to override.
