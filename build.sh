@@ -80,6 +80,16 @@ ensure_base_zips() {
         mv "$tmp" "$dest"
         green "Downloaded resources/$file"
     done
+
+    if (
+        cd resources &&
+        sha256sum --check --quiet sha256sums
+    ); then
+        green "Integrity check OK"
+    else
+        red "Integrity check failed"
+        exit 1
+    fi
 }
 
 ctx_for_version() {
